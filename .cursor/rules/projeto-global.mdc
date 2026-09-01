@@ -1,0 +1,37 @@
+---
+description: Fonte de verdade da documentação, idioma e forma de trabalho no Beach Tennis Manager
+alwaysApply: true
+---
+# Beach Tennis Manager — regra global
+
+Sistema real de gestão de alunos, professores, turmas, aulas, presença, faltas, reposições, ciclos de pagamento e financeiro.
+
+## Documentação como fonte de verdade
+
+Tratar `/docs` como fonte de verdade de requisitos e regras de negócio, em especial:
+
+- `docs/01-visao-e-requisitos.md`
+- `docs/02-regras-de-negocio.md`
+
+Antes de implementar qualquer funcionalidade:
+
+1. Localizar e ler a documentação relacionada.
+2. Conferir se a proposta está de acordo com as regras existentes.
+3. Só então implementar.
+
+Não inventar, modificar ou assumir regras de negócio sem confirmação explícita do usuário.
+
+❌ BAD: criar regra de reposição “óbvia” porque o código ainda não trata o caso.  
+✅ GOOD: ler `docs/02-regras-de-negocio.md`, implementar somente o que está documentado e perguntar se faltar alguma regra.
+
+## Forma de trabalho
+
+- Alterações incrementais, pequenas, organizadas e rastreáveis.
+- Explicar decisões técnicas importantes quando necessário.
+- Priorizar boas práticas: código limpo, manutenção, testes e segurança.
+
+## Idioma
+
+Comunicar-se sempre em português do Brasil (explicações, respostas, perguntas, planos e orientação).
+
+Código, nomes de variáveis, funções, classes, arquivos e commits seguem as convenções técnicas do projeto (não traduzir identificadores só para “ficar em português”).
