@@ -31,7 +31,10 @@ describe('admin login interface', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: 'Acesso do administrador' })).toBeTruthy();
-    expect(fetch).toHaveBeenCalledWith('/auth/me', { credentials: 'include' });
+    expect(fetch).toHaveBeenCalledWith('/auth/me', {
+      credentials: 'include',
+      cache: 'no-store'
+    });
   });
 
   it('shows the authenticated area for an existing session', async () => {
@@ -59,6 +62,7 @@ describe('admin login interface', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
+      cache: 'no-store',
       body: JSON.stringify({ email: admin.email, password: 'secret' })
     });
     expect(localStorage.length).toBe(0);

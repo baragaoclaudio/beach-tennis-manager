@@ -13,6 +13,7 @@ export async function loginAdmin(email: string, password: string): Promise<AuthU
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
+    cache: 'no-store',
     body: JSON.stringify({ email, password })
   });
 
@@ -25,7 +26,10 @@ export async function loginAdmin(email: string, password: string): Promise<AuthU
 }
 
 export async function getAuthenticatedUser(): Promise<AuthUser | null> {
-  const response = await fetch('/auth/me', { credentials: 'include' });
+  const response = await fetch('/auth/me', {
+    credentials: 'include',
+    cache: 'no-store'
+  });
 
   if (response.status === 401) {
     return null;

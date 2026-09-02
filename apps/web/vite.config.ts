@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/auth': 'http://localhost:3333'
+      '/auth': {
+        target: 'http://localhost:3333',
+        changeOrigin: true
+      }
     }
   }
 });
