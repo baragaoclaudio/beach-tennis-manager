@@ -27,9 +27,9 @@ As regras de negócio documentadas são a fonte de verdade. Quando houver difere
 
 ## 2. Visão geral da arquitetura
 
-### Decisão proposta: monólito modular
+### Decisão adotada: monorepo com monólito modular
 
-A primeira versão deve ser organizada como uma aplicação monolítica modular:
+O repositório será organizado como um monorepo gerenciado por npm Workspaces, contendo uma aplicação monolítica modular na primeira versão:
 
 ```text
 [ React + TypeScript ]
@@ -254,7 +254,7 @@ A documentação de negócio não define a lista final de endpoints, convençõe
 
 O backend deve autenticar usuários e associar cada requisição a uma identidade autenticada. Credenciais não devem ser armazenadas em texto puro; devem ser protegidas por mecanismo apropriado de hashing.
 
-A estratégia de sessão, por cookie seguro ou token, ainda não está definida na documentação.
+A estratégia de sessão adotada será Cookie HttpOnly.
 
 ### Autorização
 
@@ -317,15 +317,15 @@ Validações de formato não devem ser apresentadas como regras de negócio nova
 
 ### PostgreSQL
 
-PostgreSQL é a base proposta para persistência transacional do sistema. Deve armazenar os dados operacionais e históricos com integridade referencial, transações e controles de acesso adequados.
+PostgreSQL é a base adotada para persistência transacional do sistema. Deve armazenar os dados operacionais e históricos com integridade referencial, transações e controles de acesso adequados.
 
 A modelagem concreta de tabelas, colunas e migrations não faz parte deste documento.
 
 ### ORM
 
-#### Decisão proposta: avaliar Prisma
+#### Decisão adotada: Prisma
 
-Prisma é um candidato adequado porque oferece:
+Prisma é adequado porque oferece:
 
 - integração madura com TypeScript;
 - schema declarativo;
@@ -335,10 +335,6 @@ Prisma é um candidato adequado porque oferece:
 - boa apresentação para um projeto de portfólio.
 
 A camada de aplicação não deve depender diretamente do client do ORM em todos os casos. Repositórios e serviços de infraestrutura devem limitar o acoplamento e permitir testes mais simples.
-
-#### Ponto em aberto
-
-A escolha entre Prisma, outro ORM ou query builder ainda não foi formalmente tomada. Antes de decidir, devem ser comparados requisitos de transações, consultas, migrations, testes, desempenho e familiaridade da equipe.
 
 ### Transações
 
@@ -556,21 +552,23 @@ Essa estrutura não obriga cada entidade a possuir um serviço próprio. Os mód
 
 ### Ponto em aberto
 
-A adoção de monorepo, a ferramenta de workspace e a forma de compartilhar contratos entre frontend e backend ainda não foram escolhidas.
+A adoção de `packages/contracts` para compartilhar contratos entre frontend e backend ainda não foi escolhida.
 
 ## 20. Decisões técnicas e justificativas
 
 | Tema | Decisão proposta | Justificativa |
 |---|---|---|
+| Repositório | Monorepo com npm Workspaces | Centraliza as aplicações e permite organização compartilhada sem exigir microserviços. |
 | Estilo arquitetural | Monólito modular | Atende o tamanho atual e preserva evolução sem complexidade de microserviços. |
 | Backend | Node.js + TypeScript + Fastify | Base tecnológica definida; TypeScript favorece contratos e manutenção, e Fastify atende uma API HTTP enxuta. |
 | Frontend | React + TypeScript | Base tecnológica definida e adequada à interface responsiva e multiusuário. |
 | Banco | PostgreSQL | Base tecnológica definida, adequada a consistência transacional e histórico. |
 | Domínio | Entidades e políticas independentes de framework | Facilita testes e evita acoplamento das regras ao transporte ou ao banco. |
-| ORM | Prisma como candidato | Bom suporte a TypeScript/PostgreSQL e ergonomia, mas a escolha ainda precisa de comparação. |
+| ORM | Prisma | Bom suporte a TypeScript/PostgreSQL e ergonomia. |
 | API | REST/JSON | Simples, explícita e adequada aos recursos e casos de uso iniciais. |
 | Documentação | OpenAPI | Torna o contrato verificável e útil para frontend, testes e portfólio. |
 | Ambiente | Docker Compose para desenvolvimento | Reproduzibilidade local, principalmente do PostgreSQL. |
+| Sessão/autenticação | Cookie HttpOnly | Protege a sessão contra acesso por JavaScript no navegador. |
 | Testes | Unitários, integração e frontend | Cobre regras críticas, persistência e experiência de uso. |
 
 ### Decisões de domínio que a arquitetura deve preservar
@@ -600,14 +598,12 @@ Os seguintes pontos permanecem pendentes porque a documentação de requisitos e
 - cálculo exato do faturamento e dos indicadores financeiros;
 - relatórios obrigatórios na primeira versão;
 - regras detalhadas de cobrança e pagamento além do registro básico;
-- estratégia de sessão, cookie ou token;
 - lista final de endpoints e convenções de versionamento da API;
-- escolha definitiva do ORM entre Prisma e alternativas;
 - conjunto completo de configurações operacionais além das já documentadas;
 - formato concreto da persistência do snapshot, sem alterar seu requisito funcional;
 - plataforma de CI/CD, hospedagem, ambientes e estratégia de deploy;
 - ferramentas e políticas de observabilidade;
-- adoção de monorepo e compartilhamento de contratos;
+- adoção de `packages/contracts` para compartilhamento de contratos;
 - meta de cobertura de testes;
 - política de armazenamento de comprovantes;
 - regras financeiras não documentadas, como conciliação, estorno, parcelamento e inadimplência.

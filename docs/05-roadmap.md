@@ -44,13 +44,17 @@ O mínimo operacional pode ser implementado em incrementos, mas não deve consid
 
 ## 4. Decisões preliminares antes do código
 
-Estas decisões técnicas não são regras de negócio, mas precisam ser tomadas para iniciar a implementação:
+Estas decisões técnicas não são regras de negócio. As seguintes decisões já foram adotadas para iniciar a implementação:
 
-- formato do repositório: monorepo ou aplicações organizadas de outra forma;
-- adoção ou não de `packages/contracts` para compartilhar contratos;
-- ferramenta de workspace, se monorepo for adotado;
-- escolha do ORM ou query builder, com Prisma como candidato;
-- estratégia de sessão: cookie seguro ou token;
+- formato do repositório: monorepo;
+- gerenciamento do monorepo: npm Workspaces;
+- ORM: Prisma;
+- estratégia de sessão/autenticação: Cookie HttpOnly;
+
+Permanece opcional a adoção de `packages/contracts` para compartilhar contratos entre frontend e backend.
+
+Antes do código, ainda precisam ser definidas:
+
 - ferramenta de validação de entrada e forma de representar contratos;
 - convenções iniciais da API REST;
 - ferramenta de testes;
@@ -102,7 +106,7 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 - estabelecer a separação conceitual entre interface, aplicação, domínio e infraestrutura no backend;
 - estabelecer a organização inicial do frontend por aplicação, módulos e componentes compartilhados;
 - configurar scripts mínimos de desenvolvimento, build e verificação de tipos;
-- manter `packages/contracts` somente se a decisão de monorepo e compartilhamento tiver sido aprovada.
+- manter `packages/contracts` opcional, conforme decisão futura sobre compartilhamento de contratos.
 
 **Dependências:** Fase 0.
 
@@ -148,7 +152,7 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 **Entregas:**
 
 - configurar conexão com PostgreSQL;
-- escolher e configurar o ORM ou query builder;
+- configurar o Prisma adotado;
 - definir repositórios ou portas de persistência iniciais;
 - configurar transações para casos de uso;
 - definir estratégia de migrations quando a modelagem concreta começar;
@@ -174,7 +178,7 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 - implementar os conceitos de Usuário e Professor;
 - representar os papéis `PROFESSOR` e `ADMIN`;
 - proteger credenciais com hashing;
-- implementar autenticação conforme a estratégia escolhida;
+- implementar autenticação com Cookie HttpOnly;
 - disponibilizar login e identificação do usuário autenticado;
 - criar middleware ou mecanismo equivalente para contexto de autenticação.
 
@@ -645,7 +649,7 @@ Commits que misturam regra de negócio, refatoração ampla e configuração de 
 
 A primeira tarefa de código recomendada é a **Fase 0, seguida da Fase 1**:
 
-1. registrar as decisões técnicas mínimas, especialmente estrutura do repositório, sessão, validação, testes e ORM;
+1. registrar as decisões técnicas restantes, especialmente validação, testes, convenções da API e ambiente local;
 2. criar a estrutura inicial executável do backend Fastify e do frontend React com TypeScript;
 3. configurar scripts mínimos de typecheck, lint, teste e build;
 4. comprovar que backend e frontend iniciam e que o PostgreSQL será integrado na fase seguinte.
@@ -654,9 +658,7 @@ Essa primeira entrega cria uma base verificável sem antecipar regras de negóci
 
 ## 9. Pontos em aberto do roadmap
 
-- monorepo, workspace e adoção de `packages/contracts`;
-- escolha definitiva de Prisma, outro ORM ou query builder;
-- estratégia de sessão por cookie ou token;
+- adoção de `packages/contracts` para compartilhamento de contratos;
 - ferramenta de validação e formato definitivo dos contratos;
 - plataforma de CI/CD, hospedagem e ambientes;
 - métricas, tracing, alertas e retenção de logs;
