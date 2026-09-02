@@ -148,6 +148,8 @@ Um professor não deverá ter acesso aos dados operacionais de outros professore
 
 Professores poderão possuir configurações específicas para determinadas regras operacionais. Quando uma configuração específica não estiver definida, deverão ser utilizados os valores da configuração global do sistema.
 
+O prazo mínimo de antecedência para comunicação de ausência será tratado como uma configuração operacional que poderá ser personalizada por professor, utilizando a configuração global quando não houver uma configuração específica.
+
 ### 4.2. Administrador
 
 O administrador terá acesso global ao sistema.
@@ -829,8 +831,6 @@ As seguintes premissas foram estabelecidas durante a definição inicial do proj
 ## 20. Questões em aberto**
 
 As seguintes decisões ainda precisam ser definidas:
-
-\* Qual será o prazo mínimo para o aluno avisar uma ausência e obter direito à reposição?
 
 \* Quantos créditos de reposição um aluno poderá acumular?
 

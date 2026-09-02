@@ -544,6 +544,22 @@ O ciclo será encerrado quando não houver mais aulas ou reposições aplicávei
 
 ---
 
+## RN-XXX — Prazo mínimo para comunicação de ausência
+
+O prazo mínimo de antecedência para que o aluno comunique uma ausência e obtenha direito a reposição é uma configuração operacional.
+
+Cada professor poderá possuir uma configuração específica para esse prazo, expressa em horas.
+
+Caso o professor não possua uma configuração específica, deverá ser utilizado o prazo definido na configuração global do sistema.
+
+O prazo aplicável deverá ser determinado no início de cada novo ciclo de cobrança.
+
+Alterações posteriores na configuração global ou na configuração específica do professor não deverão modificar retroativamente o prazo aplicado a ciclos já iniciados.
+
+O sistema deverá validar se a comunicação de uma ausência ocorreu dentro do prazo mínimo estabelecido para o ciclo em questão, determinando assim se a ausência gerará direito a reposição.
+
+---
+
 ## RN-XXX — Falta em aula de reposição
 
 A ausência do aluno em uma aula utilizada como reposição não deverá gerar automaticamente um novo crédito de reposição.
@@ -566,7 +582,7 @@ Quando o ciclo for encerrado, eventuais créditos não utilizados deixarão de e
 
 As seguintes situações deverão gerar direito a reposição, observadas as regras e limites aplicáveis ao ciclo:
 
-* ausência comunicada pelo aluno com antecedência mínima de 6 horas;
+* ausência comunicada pelo aluno com antecedência igual ou superior ao prazo mínimo definido na configuração aplicável ao ciclo (conforme RN-XXX — Prazo mínimo para comunicação de ausência);
 * cancelamento da aula pelo professor;
 * cancelamento da aula por chuva ou condições climáticas que impeçam sua realização;
 * cancelamento da aula por indisponibilidade da quadra.
@@ -577,7 +593,7 @@ As seguintes situações deverão gerar direito a reposição, observadas as reg
 
 As seguintes situações não deverão gerar direito a reposição:
 
-* ausência comunicada pelo aluno com menos de 6 horas de antecedência;
+* ausência comunicada pelo aluno com antecedência inferior ao prazo mínimo definido na configuração aplicável ao ciclo (conforme RN-XXX — Prazo mínimo para comunicação de ausência);
 * ausência sem aviso prévio;
 * novas ausências após o limite máximo de reposições do ciclo ter sido atingido.
 
@@ -675,9 +691,10 @@ As regras específicas de concessão, utilização, limite, validade e encerrame
 
 A configuração máxima de reposições por ciclo poderá ser definida globalmente e sobrescrita por professor, conforme as regras da seção 2.
 
+O prazo mínimo de antecedência para comunicação de ausência poderá ser definido globalmente e sobrescrito por professor, conforme a seção 2 e a RN-XXX (Prazo mínimo para comunicação de ausência).
+
 Não permanecem, neste momento, pendências relacionadas a:
 
-* prazo mínimo para aviso de ausência;
 * ausência sem aviso;
 * validade do crédito;
 * professor responsável pela reposição;
