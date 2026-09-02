@@ -1,17 +1,167 @@
 :root {
-  font-family: system-ui, sans-serif;
-  color: #17212b;
-  background: #f5f7f4;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #19342f;
+  background: #f2eee4;
 }
 
 body {
   margin: 0;
+  min-width: 320px;
 }
 
-main {
+button,
+input {
+  font: inherit;
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
+  gap: clamp(3rem, 9vw, 9rem);
+  align-items: center;
+  min-height: 100vh;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 3rem 5vw;
+}
+
+.auth-intro {
+  max-width: 560px;
+}
+
+.eyebrow,
+.panel-kicker {
+  color: #c46b3c;
+  font-family: Arial, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+.auth-intro h1 {
+  margin: 1rem 0;
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  line-height: 0.94;
+  letter-spacing: 0;
+}
+
+.auth-intro p {
+  max-width: 34rem;
+  color: #55716a;
+  font-family: Arial, sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.login-panel {
+  padding: clamp(2rem, 5vw, 3.5rem);
+  background: #fffdf8;
+  border: 1px solid #d8d3c7;
+  box-shadow: 14px 14px 0 #d9e2d4;
+}
+
+.panel-heading h2 {
+  margin: 0.8rem 0 0.5rem;
+  font-size: 2rem;
+  line-height: 1.05;
+}
+
+.panel-heading p {
+  color: #6c7770;
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+}
+
+form {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 2rem;
+}
+
+label {
+  margin-top: 0.6rem;
+  color: #39534c;
+  font-family: Arial, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 0.9rem;
+  color: #19342f;
+  background: #f8f5ed;
+  border: 1px solid #c9c8bd;
+  border-radius: 2px;
+}
+
+input:focus {
+  outline: 2px solid #c46b3c;
+  outline-offset: 2px;
+}
+
+button {
+  margin-top: 1.2rem;
+  padding: 0.9rem 1rem;
+  color: #fffdf8;
+  background: #19342f;
+  border: 0;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.form-error {
+  margin: 0.8rem 0 0;
+  color: #a33f34;
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+}
+
+.status-layout,
+.authenticated-layout {
   display: grid;
   min-height: 100vh;
   place-content: center;
+  gap: 0.8rem;
   padding: 2rem;
   text-align: center;
+}
+
+.status-layout p,
+.authenticated-layout p,
+.authenticated-layout strong {
+  color: #55716a;
+  font-family: Arial, sans-serif;
+}
+
+@media (max-width: 760px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+
+  .auth-intro h1 {
+    font-size: clamp(3rem, 16vw, 5rem);
+  }
+
+  .login-panel {
+    box-shadow: 8px 8px 0 #d9e2d4;
+  }
 }
