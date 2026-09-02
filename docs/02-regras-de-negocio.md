@@ -302,9 +302,19 @@ Cada ciclo de cobrança corresponde a quatro aulas.
 
 ## RN-016 — Pagamento antecipado
 
-O pagamento de um ciclo deverá ocorrer antecipadamente às aulas daquele ciclo.
+O pagamento de um ciclo poderá ocorrer antes do início do ciclo e deverá ocorrer antecipadamente às aulas daquele ciclo.
 
 O pagamento representa o direito às próximas quatro aulas.
+
+---
+
+## Início do ciclo
+
+O ciclo será iniciado quando ocorrer a primeira aula efetivamente realizada ou utilizada como parte daquele ciclo.
+
+O pagamento poderá ocorrer antes do início do ciclo.
+
+Feriados não iniciarão um ciclo e não consumirão uma das quatro aulas do ciclo.
 
 ---
 
@@ -357,13 +367,13 @@ A alteração posterior do preço da matrícula não deverá alterar ciclos hist
 
 ---
 
-## RN-XXX — Política aplicada ao ciclo
+## Política aplicada ao ciclo
 
-As regras operacionais aplicáveis a um ciclo deverão ser determinadas no início de sua execução.
+No momento em que o ciclo iniciar, as configurações operacionais aplicáveis ao ciclo deverão ser determinadas e congeladas.
 
 As configurações utilizadas deverão permanecer associadas ao ciclo durante sua execução.
 
-Alterações posteriores nas configurações globais ou nas configurações específicas do professor não deverão modificar retroativamente ciclos já iniciados.
+Alterações posteriores nas configurações globais ou nas configurações específicas do professor não deverão afetar ciclos já iniciados.
 
 ---
 
