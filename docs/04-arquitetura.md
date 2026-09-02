@@ -168,7 +168,7 @@ Não é necessário criar uma camada ou serviço artificial para cada entidade. 
 As camadas internas devem depender de abstrações para acesso a dados e serviços externos. Implementações concretas ficam na infraestrutura, incluindo:
 
 - cliente do PostgreSQL;
-- ORM ou query builder escolhido;
+- Prisma;
 - repositórios;
 - gerenciamento de transações;
 - hashing e verificação de credenciais;
@@ -291,7 +291,7 @@ Testes de autorização devem tentar acessar recursos de outro professor e verif
 
 A validação deve ocorrer em níveis complementares:
 
-1. validação de transporte: formato, tipos, campos obrigatórios e limites de entrada;
+1. validação de transporte com Zod: formato, tipos, campos obrigatórios e limites de entrada;
 2. validação de aplicação: existência, relações, permissões e pré-condições do caso de uso;
 3. validação de domínio: invariantes e regras de negócio;
 4. restrições de persistência: integridade referencial e unicidade que possam ser reforçadas pelo banco.
@@ -368,6 +368,8 @@ O frontend deve transformar erros conhecidos em mensagens úteis, sem substituir
 ## 13. Testes
 
 ### Backend e domínio
+
+Os testes automatizados serão implementados com Vitest, mantendo os testes de comportamento próximos das regras e dos casos de uso correspondentes.
 
 Priorizar testes unitários para regras como:
 
@@ -556,7 +558,7 @@ A adoção de `packages/contracts` para compartilhar contratos entre frontend e 
 
 ## 20. Decisões técnicas e justificativas
 
-| Tema | Decisão proposta | Justificativa |
+| Tema | Decisão | Justificativa |
 |---|---|---|
 | Repositório | Monorepo com npm Workspaces | Centraliza as aplicações e permite organização compartilhada sem exigir microserviços. |
 | Estilo arquitetural | Monólito modular | Atende o tamanho atual e preserva evolução sem complexidade de microserviços. |
@@ -569,6 +571,8 @@ A adoção de `packages/contracts` para compartilhar contratos entre frontend e 
 | Documentação | OpenAPI | Torna o contrato verificável e útil para frontend, testes e portfólio. |
 | Ambiente | Docker Compose para desenvolvimento | Reproduzibilidade local, principalmente do PostgreSQL. |
 | Sessão/autenticação | Cookie HttpOnly | Protege a sessão contra acesso por JavaScript no navegador. |
+| Validação de entrada | Zod | Valida schemas de transporte com integração adequada ao TypeScript. |
+| Testes automatizados | Vitest | Executa testes unitários e de integração com uma configuração adequada ao TypeScript. |
 | Testes | Unitários, integração e frontend | Cobre regras críticas, persistência e experiência de uso. |
 
 ### Decisões de domínio que a arquitetura deve preservar

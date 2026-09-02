@@ -50,14 +50,15 @@ Estas decisões técnicas não são regras de negócio. As seguintes decisões j
 - gerenciamento do monorepo: npm Workspaces;
 - ORM: Prisma;
 - estratégia de sessão/autenticação: Cookie HttpOnly;
+- validação de entrada: Zod;
+- testes automatizados: Vitest;
 
 Permanece opcional a adoção de `packages/contracts` para compartilhar contratos entre frontend e backend.
 
 Antes do código, ainda precisam ser definidas:
 
-- ferramenta de validação de entrada e forma de representar contratos;
+- forma de representar contratos;
 - convenções iniciais da API REST;
-- ferramenta de testes;
 - estratégia local de execução do PostgreSQL;
 - plataforma de CI/CD e ambientes de execução, quando a automação for iniciada.
 
@@ -75,7 +76,7 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 
 ### Fase 0 — Preparação e decisões técnicas mínimas
 
-**Objetivo:** tornar explícita a forma de trabalho e fechar apenas as escolhas técnicas necessárias para criar a base.
+**Objetivo:** tornar explícita a forma de trabalho e fechar apenas as decisões técnicas ainda necessárias para criar a base.
 
 **Entregas:**
 
@@ -649,7 +650,7 @@ Commits que misturam regra de negócio, refatoração ampla e configuração de 
 
 A primeira tarefa de código recomendada é a **Fase 0, seguida da Fase 1**:
 
-1. registrar as decisões técnicas restantes, especialmente validação, testes, convenções da API e ambiente local;
+1. registrar as decisões técnicas restantes, especialmente convenções da API e ambiente local;
 2. criar a estrutura inicial executável do backend Fastify e do frontend React com TypeScript;
 3. configurar scripts mínimos de typecheck, lint, teste e build;
 4. comprovar que backend e frontend iniciam e que o PostgreSQL será integrado na fase seguinte.
@@ -659,7 +660,7 @@ Essa primeira entrega cria uma base verificável sem antecipar regras de negóci
 ## 9. Pontos em aberto do roadmap
 
 - adoção de `packages/contracts` para compartilhamento de contratos;
-- ferramenta de validação e formato definitivo dos contratos;
+- formato definitivo dos contratos;
 - plataforma de CI/CD, hospedagem e ambientes;
 - métricas, tracing, alertas e retenção de logs;
 - permissões detalhadas do administrador;
