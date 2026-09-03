@@ -48,7 +48,7 @@ Estas decisões técnicas não são regras de negócio. As seguintes decisões j
 
 - formato do repositório: monorepo;
 - gerenciamento do monorepo: npm Workspaces;
-- ORM: Prisma;
+- ORM: Drizzle ORM;
 - estratégia de sessão/autenticação: Cookie HttpOnly;
 - validação de entrada: Zod;
 - testes automatizados: Vitest;
@@ -153,7 +153,7 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 **Entregas:**
 
 - configurar conexão com PostgreSQL;
-- configurar o Prisma adotado;
+- configurar o Drizzle ORM adotado;
 - definir repositórios ou portas de persistência iniciais;
 - configurar transações para casos de uso;
 - definir estratégia de migrations quando a modelagem concreta começar;

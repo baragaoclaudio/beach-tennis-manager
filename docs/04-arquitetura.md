@@ -168,7 +168,7 @@ Não é necessário criar uma camada ou serviço artificial para cada entidade. 
 As camadas internas devem depender de abstrações para acesso a dados e serviços externos. Implementações concretas ficam na infraestrutura, incluindo:
 
 - cliente do PostgreSQL;
-- Prisma;
+- Drizzle ORM;
 - repositórios;
 - gerenciamento de transações;
 - hashing e verificação de credenciais;
@@ -331,18 +331,18 @@ A modelagem concreta de tabelas, colunas e migrations não faz parte deste docum
 
 ### ORM
 
-#### Decisão adotada: Prisma
+#### Decisão adotada: Drizzle ORM
 
-Prisma é adequado porque oferece:
+Drizzle ORM é adequado porque oferece:
 
-- integração madura com TypeScript;
-- schema declarativo;
-- client tipado;
+- integração com TypeScript;
+- schema declarado em TypeScript;
+- consultas tipadas;
 - suporte a PostgreSQL;
 - migrations e ferramentas úteis para desenvolvimento;
 - boa apresentação para um projeto de portfólio.
 
-A camada de aplicação não deve depender diretamente do client do ORM em todos os casos. Repositórios e serviços de infraestrutura devem limitar o acoplamento e permitir testes mais simples.
+A camada de aplicação não deve depender diretamente do Drizzle ORM em todos os casos. Repositórios e serviços de infraestrutura devem limitar o acoplamento e permitir testes mais simples.
 
 ### Transações
 
@@ -574,7 +574,7 @@ A adoção de `packages/contracts` para compartilhar contratos entre frontend e 
 | Frontend | React + TypeScript | Base tecnológica definida e adequada à interface responsiva e multiusuário. |
 | Banco | PostgreSQL | Base tecnológica definida, adequada a consistência transacional e histórico. |
 | Domínio | Entidades e políticas independentes de framework | Facilita testes e evita acoplamento das regras ao transporte ou ao banco. |
-| ORM | Prisma | Bom suporte a TypeScript/PostgreSQL e ergonomia. |
+| ORM | Drizzle ORM | Bom suporte a TypeScript/PostgreSQL, schema tipado e ergonomia. |
 | API | REST/JSON | Simples, explícita e adequada aos recursos e casos de uso iniciais. |
 | Documentação | OpenAPI | Torna o contrato verificável e útil para frontend, testes e portfólio. |
 | Ambiente | Docker Compose para desenvolvimento | Reproduzibilidade local, principalmente do PostgreSQL. |
