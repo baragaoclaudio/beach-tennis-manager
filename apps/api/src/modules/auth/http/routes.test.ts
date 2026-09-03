@@ -1,7 +1,10 @@
 import argon2 from 'argon2';
+import { and, count, eq, inArray } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../app.js';
-import { prisma } from '../../../infrastructure/database/prisma-client.js';
+import { database, pool } from '../../../infrastructure/database/connection.js';
+import { sessions, users } from '../../../infrastructure/database/schema.js';
 
 const adminEmail = `admin-test-${Date.now()}@example.com`;
 const professorEmail = `professor-test-${Date.now()}@example.com`;
@@ -11,28 +14,23 @@ const app = buildApp();
 beforeAll(async () => {
   const passwordHash = await argon2.hash(password);
 
-  await prisma.user.createMany({
-    data: [
-      { email: adminEmail, passwordHash, role: 'ADMIN' },
-      { email: professorEmail, passwordHash, role: 'PROFESSOR' }
-    ]
-  });
+  await database.insert(users).values([
+    { id: randomUUID(), email: adminEmail, passwordHash, role: 'ADMIN', updatedAt: new Date() },
+    { id: randomUUID(), email: professorEmail, passwordHash, role: 'PROFESSOR', updatedAt: new Date() }
+  ]);
 });
 
 afterAll(async () => {
-  const users = await prisma.user.findMany({
-    where: { email: { in: [adminEmail, professorEmail] } },
-    select: { id: true }
-  });
+  const testUsers = await database
+    .select({ id: users.id })
+    .from(users)
+    .where(inArray(users.email, [adminEmail, professorEmail]));
+  const userIds = testUsers.map((user) => user.id);
 
-  await prisma.session.deleteMany({
-    where: { userId: { in: users.map((user) => user.id) } }
-  });
-  await prisma.user.deleteMany({
-    where: { id: { in: users.map((user) => user.id) } }
-  });
+  await database.delete(sessions).where(inArray(sessions.userId, userIds));
+  await database.delete(users).where(inArray(users.id, userIds));
   await app.close();
-  await prisma.$disconnect();
+  await pool.end();
 });
 
 describe('admin authentication', () => {
@@ -54,10 +52,15 @@ describe('admin authentication', () => {
     const cookie = Array.isArray(setCookie) ? setCookie[0] : setCookie;
     expect(cookie).toContain('HttpOnly');
 
-    const sessionCount = await prisma.session.count({
-      where: { userId: (await prisma.user.findUniqueOrThrow({ where: { email: adminEmail } })).id }
-    });
-    expect(sessionCount).toBe(1);
+    const [adminUser] = await database
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, adminEmail));
+    const [sessionCount] = await database
+      .select({ count: count() })
+      .from(sessions)
+      .where(and(eq(sessions.userId, adminUser.id)));
+    expect(Number(sessionCount.count)).toBe(1);
   });
 
   it('returns the authenticated admin from the HttpOnly session', async () => {

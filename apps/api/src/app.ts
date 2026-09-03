@@ -1,15 +1,15 @@
 import 'dotenv/config';
 import cookie from '@fastify/cookie';
 import Fastify from 'fastify';
-import { prisma } from './infrastructure/database/prisma-client.js';
+import { database } from './infrastructure/database/connection.js';
 import { passwordVerifier } from './infrastructure/auth/password-verifier.js';
-import { PrismaSessionRepository, PrismaUserRepository } from './infrastructure/auth/session-repository.js';
+import { DrizzleSessionRepository, DrizzleUserRepository } from './infrastructure/auth/session-repository.js';
 import { authRoutes } from './modules/auth/http/routes.js';
 
 export function buildApp() {
   const app = Fastify({ logger: true });
-  const users = new PrismaUserRepository(prisma);
-  const sessions = new PrismaSessionRepository(prisma);
+  const users = new DrizzleUserRepository(database);
+  const sessions = new DrizzleSessionRepository(database);
 
   app.register(cookie);
   app.get('/health', async () => ({ status: 'ok' }));
