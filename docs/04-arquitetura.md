@@ -27,7 +27,7 @@ As regras de negócio documentadas são a fonte de verdade. Quando houver difere
 
 ## 2. Visão geral da arquitetura
 
-### Decisão adotada: monorepo com monólito modular
+### Decisão adotada: monorepo com npm Workspaces e monólito modular
 
 O repositório será organizado como um monorepo gerenciado por npm Workspaces, contendo uma aplicação monolítica modular na primeira versão:
 
@@ -172,7 +172,8 @@ As camadas internas devem depender de abstrações para acesso a dados e serviç
 - repositórios;
 - gerenciamento de transações;
 - hashing e verificação de credenciais;
-- geração e validação de tokens;
+- geração de identificador de sessão aleatório;
+- persistência e validação da sessão no servidor;
 - armazenamento de comprovantes, se definido posteriormente;
 - logger e configuração da aplicação.
 
@@ -254,7 +255,14 @@ A documentação de negócio não define a lista final de endpoints, convençõe
 
 O backend deve autenticar usuários e associar cada requisição a uma identidade autenticada. Credenciais não devem ser armazenadas em texto puro; devem ser protegidas por mecanismo apropriado de hashing.
 
-A estratégia de sessão adotada será Cookie HttpOnly.
+A autenticação utiliza sessão baseada em um identificador aleatório, persistida no servidor e enviada ao cliente por Cookie HttpOnly. O identificador de sessão não representa um JWT e não deve ser tratado como token JWT.
+
+Na primeira etapa, a autenticação disponibilizada é exclusiva para usuários com papel `ADMIN`. O usuário `ADMIN` não é um `Professor` e pode existir sem associação a um professor.
+
+Os endpoints implementados nesta etapa são:
+
+- `POST /auth/admin/login`: autentica o administrador e cria a sessão;
+- `GET /auth/me`: identifica o usuário autenticado a partir da sessão.
 
 ### Autorização
 
@@ -291,7 +299,7 @@ Testes de autorização devem tentar acessar recursos de outro professor e verif
 
 A validação deve ocorrer em níveis complementares:
 
-1. validação de transporte com Zod: formato, tipos, campos obrigatórios e limites de entrada;
+1. validação de transporte adotada com Zod: formato, tipos, campos obrigatórios e limites de entrada;
 2. validação de aplicação: existência, relações, permissões e pré-condições do caso de uso;
 3. validação de domínio: invariantes e regras de negócio;
 4. restrições de persistência: integridade referencial e unicidade que possam ser reforçadas pelo banco.
@@ -315,7 +323,7 @@ Validações de formato não devem ser apresentadas como regras de negócio nova
 
 ## 11. Persistência e acesso ao banco
 
-### PostgreSQL
+### Decisão adotada: PostgreSQL
 
 PostgreSQL é a base adotada para persistência transacional do sistema. Deve armazenar os dados operacionais e históricos com integridade referencial, transações e controles de acesso adequados.
 
@@ -369,7 +377,7 @@ O frontend deve transformar erros conhecidos em mensagens úteis, sem substituir
 
 ### Backend e domínio
 
-Os testes automatizados serão implementados com Vitest, mantendo os testes de comportamento próximos das regras e dos casos de uso correspondentes.
+Os testes automatizados utilizam Vitest, mantendo os testes de comportamento próximos das regras e dos casos de uso correspondentes.
 
 Priorizar testes unitários para regras como:
 
@@ -477,7 +485,7 @@ Registrar, conforme a necessidade:
 - falhas de integração e persistência;
 - eventos relevantes de negócio quando necessário para rastreabilidade.
 
-Não registrar senhas, tokens, credenciais ou comprovantes em conteúdo inadequado. Logs não substituem o histórico de domínio: correções manuais de ciclos e informações financeiras devem preservar rastreabilidade de acordo com as regras.
+Não registrar senhas, identificadores de sessão, credenciais ou comprovantes em conteúdo inadequado. Logs não substituem o histórico de domínio: correções manuais de ciclos e informações financeiras devem preservar rastreabilidade de acordo com as regras.
 
 ### Ponto em aberto
 
