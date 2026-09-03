@@ -37,7 +37,10 @@ export function App() {
   }
 
   if (sessionState === 'authenticated' && user) {
-    return <AuthenticatedView user={user} />;
+    return <AuthenticatedView user={user} onLoggedOut={() => {
+      setUser(null);
+      setSessionState('anonymous');
+    }} />;
   }
 
   return <LoginPage onAuthenticated={(authenticatedUser) => {

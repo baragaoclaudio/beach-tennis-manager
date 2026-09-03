@@ -73,4 +73,8 @@ export class DrizzleSessionRepository implements SessionRepository {
       }
     };
   }
+
+  async deleteByTokenHash(tokenHash: string): Promise<void> {
+    await this.database.delete(sessions).where(eq(sessions.tokenHash, tokenHash));
+  }
 }

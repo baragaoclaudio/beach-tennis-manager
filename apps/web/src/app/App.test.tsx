@@ -97,4 +97,22 @@ describe('admin login interface', () => {
 
     expect((await screen.findByRole('alert')).textContent).toContain('Confira os dados informados.');
   });
+
+  it('logs out and returns to the login screen', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(response(200, { user: admin }))
+      .mockResolvedValueOnce(response(204, {}));
+
+    render(<App />);
+    expect(await screen.findByText('Você está conectado como administrador.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }));
+
+    expect(await screen.findByRole('heading', { name: 'Acesso do administrador' })).toBeTruthy();
+    expect(fetch).toHaveBeenLastCalledWith('/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+      cache: 'no-store'
+    });
+    expect(screen.queryByText('Você está conectado como administrador.')).toBeNull();
+  });
 });

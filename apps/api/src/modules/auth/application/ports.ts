@@ -24,6 +24,7 @@ export interface UserRepository {
 export interface SessionRepository {
   create(input: AuthenticatedSession): Promise<void>;
   findByTokenHash(tokenHash: string): Promise<AuthenticatedSession | null>;
+  deleteByTokenHash(tokenHash: string): Promise<void>;
 }
 
 export interface PasswordVerifier {

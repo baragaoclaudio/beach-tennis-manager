@@ -5,6 +5,7 @@ import {
 } from '../application/get-authenticated-user.js';
 import {
   InvalidAdminCredentialsError,
+  hashSessionToken,
   loginAdmin,
   ADMIN_SESSION_TTL_SECONDS
 } from '../application/login-admin.js';
@@ -93,5 +94,16 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
     }
 
     return reply.send({ user });
+  });
+
+  app.post('/auth/logout', async (request, reply) => {
+    const token = request.cookies[SESSION_COOKIE_NAME];
+
+    if (token) {
+      await options.sessions.deleteByTokenHash(hashSessionToken(token));
+    }
+
+    reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
+    return reply.code(204).send();
   });
 };

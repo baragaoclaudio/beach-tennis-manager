@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../app.js';
 import { database, pool } from '../../../infrastructure/database/connection.js';
 import { sessions, users } from '../../../infrastructure/database/schema.js';
+import { hashSessionToken } from '../application/login-admin.js';
 
 const adminEmail = `admin-test-${Date.now()}@example.com`;
 const professorEmail = `professor-test-${Date.now()}@example.com`;
@@ -120,5 +121,45 @@ describe('admin authentication', () => {
     const response = await app.inject({ method: 'GET', url: '/auth/me' });
 
     expect(response.statusCode).toBe(401);
+  });
+
+  it('logs out an authenticated admin and invalidates the session', async () => {
+    const loginResponse = await app.inject({
+      method: 'POST',
+      url: '/auth/admin/login',
+      payload: { email: adminEmail, password }
+    });
+    const setCookie = loginResponse.headers['set-cookie'];
+    const cookie = Array.isArray(setCookie) ? setCookie[0] : setCookie;
+    const token = cookie?.split(';')[0].split('=')[1] ?? '';
+
+    const logoutResponse = await app.inject({
+      method: 'POST',
+      url: '/auth/logout',
+      headers: { cookie: cookie?.split(';')[0] ?? '' }
+    });
+
+    expect(logoutResponse.statusCode).toBe(204);
+    expect(logoutResponse.headers['set-cookie']).toContain('Expires=Thu, 01 Jan 1970');
+
+    const remainingSessions = await database
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(eq(sessions.tokenHash, hashSessionToken(token)));
+    expect(remainingSessions).toHaveLength(0);
+
+    const meResponse = await app.inject({
+      method: 'GET',
+      url: '/auth/me',
+      headers: { cookie: cookie?.split(';')[0] ?? '' }
+    });
+    expect(meResponse.statusCode).toBe(401);
+  });
+
+  it('treats logout without a session as idempotent', async () => {
+    const response = await app.inject({ method: 'POST', url: '/auth/logout' });
+
+    expect(response.statusCode).toBe(204);
+    expect(response.headers['set-cookie']).toContain('Expires=Thu, 01 Jan 1970');
   });
 });

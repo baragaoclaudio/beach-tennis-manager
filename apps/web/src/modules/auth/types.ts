@@ -42,3 +42,15 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
   const data = (await response.json()) as AuthResponse;
   return data.user;
 }
+
+export async function logout(): Promise<void> {
+  const response = await fetch('/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store'
+  });
+
+  if (!response.ok) {
+    throw new Error('Não foi possível encerrar a sessão.');
+  }
+}
