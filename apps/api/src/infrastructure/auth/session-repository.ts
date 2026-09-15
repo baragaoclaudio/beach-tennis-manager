@@ -7,7 +7,7 @@ import type {
   UserCredentials,
   UserRepository
 } from '../../modules/auth/application/ports.js';
-import { sessions, users } from '../database/schema.js';
+import { refreshTokens, users } from '../database/schema.js';
 import type * as databaseSchema from '../database/schema.js';
 
 type Database = NodePgDatabase<typeof databaseSchema>;
@@ -30,32 +30,52 @@ export class DrizzleUserRepository implements UserRepository {
 
     return result[0] ?? null;
   }
+
+  async findById(id: string): Promise<UserCredentials | null> {
+    const result = await this.database
+      .select({
+        id: users.id,
+        email: users.email,
+        passwordHash: users.passwordHash,
+        role: users.role,
+        isActive: users.isActive
+      })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+
+    return result[0] ?? null;
+  }
 }
 
 export class DrizzleSessionRepository implements SessionRepository {
   constructor(private readonly database: Database) {}
 
   async create(input: AuthenticatedSession): Promise<void> {
-    await this.database.insert(sessions).values({
-      id: randomUUID(),
+    const id = randomUUID();
+
+    await this.database.insert(refreshTokens).values({
+      id,
       tokenHash: input.tokenHash,
       expiresAt: input.expiresAt,
-      userId: input.user.id
+      userId: input.user.id,
+      familyId: input.familyId
     });
   }
 
   async findByTokenHash(tokenHash: string): Promise<AuthenticatedSession | null> {
     const result = await this.database
       .select({
-        tokenHash: sessions.tokenHash,
-        expiresAt: sessions.expiresAt,
+        tokenHash: refreshTokens.tokenHash,
+        expiresAt: refreshTokens.expiresAt,
+        familyId: refreshTokens.familyId,
         id: users.id,
         email: users.email,
         role: users.role
       })
-      .from(sessions)
-      .innerJoin(users, eq(sessions.userId, users.id))
-      .where(eq(sessions.tokenHash, tokenHash))
+      .from(refreshTokens)
+      .innerJoin(users, eq(refreshTokens.userId, users.id))
+      .where(eq(refreshTokens.tokenHash, tokenHash))
       .limit(1);
     const session = result[0];
 
@@ -66,6 +86,7 @@ export class DrizzleSessionRepository implements SessionRepository {
     return {
       tokenHash: session.tokenHash,
       expiresAt: session.expiresAt,
+      familyId: session.familyId,
       user: {
         id: session.id,
         email: session.email,
@@ -75,6 +96,6 @@ export class DrizzleSessionRepository implements SessionRepository {
   }
 
   async deleteByTokenHash(tokenHash: string): Promise<void> {
-    await this.database.delete(sessions).where(eq(sessions.tokenHash, tokenHash));
+    await this.database.delete(refreshTokens).where(eq(refreshTokens.tokenHash, tokenHash));
   }
 }

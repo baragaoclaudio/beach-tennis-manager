@@ -49,7 +49,7 @@ Estas decisões técnicas não são regras de negócio. As seguintes decisões j
 - formato do repositório: monorepo;
 - gerenciamento do monorepo: npm Workspaces;
 - ORM: Drizzle ORM;
-- estratégia de sessão/autenticação: Cookie HttpOnly;
+- estratégia de sessão/autenticação: Access Token JWT e Refresh Token opaco, ambos em Cookie HttpOnly;
 - validação de entrada: Zod;
 - testes automatizados: Vitest;
 
@@ -172,18 +172,19 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 
 ### Fase 4 — Usuário, Professor e autenticação
 
-**Objetivo:** permitir autenticação e identificar o professor da sessão.
+**Objetivo:** permitir autenticação e identificar o professor autenticado.
 
 **Entregas:**
 
 - implementar os conceitos de Usuário e Professor;
 - representar os papéis `PROFESSOR` e `ADMIN`;
 - proteger credenciais com hashing;
-- implementar autenticação com Cookie HttpOnly;
-- disponibilizar login e identificação do usuário autenticado;
+- implementar autenticação com Access Token JWT e Refresh Token opaco, ambos em Cookie HttpOnly;
+- persistir Refresh Tokens na tabela `refresh_tokens`, com hash SHA-256, rotação e detecção de reutilização;
+- disponibilizar login, identificação do usuário autenticado, renovação e encerramento da autenticação;
 - criar middleware ou mecanismo equivalente para contexto de autenticação.
 
-**Dependências:** Fases 2 e 3; decisão de sessão da Fase 0.
+**Dependências:** Fases 2 e 3; decisão de autenticação da Fase 0.
 
 **Critérios de conclusão:**
 

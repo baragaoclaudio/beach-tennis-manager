@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { loginAdmin } from '../types';
+import { loginAdmin } from '../auth-api';
 import type { AuthUser } from '../types';
 
 type LoginPageProps = {

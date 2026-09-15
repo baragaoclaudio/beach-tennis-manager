@@ -1,4 +1,4 @@
-import { logout } from '../types';
+import { logout } from '../auth-api';
 import type { AuthUser } from '../types';
 
 type AuthenticatedViewProps = {

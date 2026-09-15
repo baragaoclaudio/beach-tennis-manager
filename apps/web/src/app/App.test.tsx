@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetAuthClientState } from '../modules/auth/http-client';
 import { App } from './App';
 
 const admin = {
@@ -8,7 +9,7 @@ const admin = {
   role: 'ADMIN' as const
 };
 
-function response(status: number, body: unknown): Response {
+function jsonResponse(status: number, body: unknown = {}): Response {
   return {
     ok: status >= 200 && status < 300,
     status,
@@ -16,40 +17,128 @@ function response(status: number, body: unknown): Response {
   } as Response;
 }
 
+function requestUrl(input: RequestInfo | URL): string {
+  return String(input);
+}
+
+function stubAuthFetch(options?: {
+  me?: number;
+  refresh?: number;
+  login?: number;
+  logout?: number;
+}) {
+  const me = options?.me ?? 401;
+  const refresh = options?.refresh ?? 401;
+  const login = options?.login ?? 401;
+  const logout = options?.logout ?? 204;
+
+  vi.mocked(fetch).mockImplementation(async (input) => {
+    const url = requestUrl(input);
+
+    if (url === '/auth/me') {
+      return jsonResponse(me, me === 200 ? { user: admin } : {});
+    }
+
+    if (url === '/auth/refresh') {
+      if (refresh === 200) {
+        return jsonResponse(200, { user: admin });
+      }
+
+      return jsonResponse(refresh);
+    }
+
+    if (url === '/auth/admin/login') {
+      return jsonResponse(login, login === 200 ? { user: admin } : {});
+    }
+
+    if (url === '/auth/logout') {
+      return jsonResponse(logout);
+    }
+
+    throw new Error(`unexpected url ${url}`);
+  });
+}
+
 describe('admin login interface', () => {
   beforeEach(() => {
+    resetAuthClientState();
     vi.stubGlobal('fetch', vi.fn());
+    stubAuthFetch();
   });
 
   afterEach(() => {
+    resetAuthClientState();
     vi.restoreAllMocks();
   });
 
   it('shows the login when there is no existing session', async () => {
-    vi.mocked(fetch).mockResolvedValue(response(401, {}));
-
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: 'Acesso do administrador' })).toBeTruthy();
+    expect(vi.mocked(fetch).mock.calls.map(([input]) => requestUrl(input))).toEqual([
+      '/auth/me',
+      '/auth/refresh'
+    ]);
     expect(fetch).toHaveBeenCalledWith('/auth/me', {
+      credentials: 'include',
+      cache: 'no-store'
+    });
+    expect(fetch).toHaveBeenCalledWith('/auth/refresh', {
+      method: 'POST',
       credentials: 'include',
       cache: 'no-store'
     });
   });
 
   it('shows the authenticated area for an existing session', async () => {
-    vi.mocked(fetch).mockResolvedValue(response(200, { user: admin }));
+    stubAuthFetch({ me: 200 });
 
     render(<App />);
 
     expect(await screen.findByText('Você está conectado como administrador.')).toBeTruthy();
     expect(screen.getByText(admin.email)).toBeTruthy();
+    expect(vi.mocked(fetch).mock.calls.some(([input]) => requestUrl(input) === '/auth/refresh')).toBe(false);
+  });
+
+  it('restores the session when the access token is expired and refresh succeeds', async () => {
+    let meCalls = 0;
+
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const url = requestUrl(input);
+
+      if (url === '/auth/me') {
+        meCalls += 1;
+        return jsonResponse(meCalls === 1 ? 401 : 200, meCalls === 1 ? {} : { user: admin });
+      }
+
+      if (url === '/auth/refresh') {
+        return jsonResponse(200, { user: admin });
+      }
+
+      throw new Error(`unexpected url ${url}`);
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('Você está conectado como administrador.')).toBeTruthy();
+    expect(vi.mocked(fetch).mock.calls.map(([input]) => requestUrl(input))).toEqual([
+      '/auth/me',
+      '/auth/refresh',
+      '/auth/me'
+    ]);
+  });
+
+  it('goes to login without retrying refresh after reuse detection', async () => {
+    stubAuthFetch({ refresh: 409 });
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: 'Acesso do administrador' })).toBeTruthy();
+    expect(vi.mocked(fetch).mock.calls.filter(([input]) => requestUrl(input) === '/auth/refresh')).toHaveLength(1);
   });
 
   it('submits credentials with cookies enabled and shows the authenticated area', async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(response(401, {}))
-      .mockResolvedValueOnce(response(200, { user: admin }));
+    stubAuthFetch({ login: 200 });
 
     render(<App />);
     await screen.findByRole('heading', { name: 'Acesso do administrador' });
@@ -58,7 +147,7 @@ describe('admin login interface', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
     await waitFor(() => expect(screen.getByText('Você está conectado como administrador.')).toBeTruthy());
-    expect(fetch).toHaveBeenLastCalledWith('/auth/admin/login', {
+    expect(fetch).toHaveBeenCalledWith('/auth/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -70,10 +159,6 @@ describe('admin login interface', () => {
   });
 
   it('shows a generic message for invalid credentials and clears the password', async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(response(401, {}))
-      .mockResolvedValueOnce(response(401, {}));
-
     render(<App />);
     await screen.findByRole('heading', { name: 'Acesso do administrador' });
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: admin.email } });
@@ -85,9 +170,7 @@ describe('admin login interface', () => {
   });
 
   it('shows validation errors from the API', async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(response(401, {}))
-      .mockResolvedValueOnce(response(400, {}));
+    stubAuthFetch({ login: 400 });
 
     render(<App />);
     await screen.findByRole('heading', { name: 'Acesso do administrador' });
@@ -99,16 +182,14 @@ describe('admin login interface', () => {
   });
 
   it('logs out and returns to the login screen', async () => {
-    vi.mocked(fetch)
-      .mockResolvedValueOnce(response(200, { user: admin }))
-      .mockResolvedValueOnce(response(204, {}));
+    stubAuthFetch({ me: 200 });
 
     render(<App />);
     expect(await screen.findByText('Você está conectado como administrador.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Sair' }));
 
     expect(await screen.findByRole('heading', { name: 'Acesso do administrador' })).toBeTruthy();
-    expect(fetch).toHaveBeenLastCalledWith('/auth/logout', {
+    expect(fetch).toHaveBeenCalledWith('/auth/logout', {
       method: 'POST',
       credentials: 'include',
       cache: 'no-store'

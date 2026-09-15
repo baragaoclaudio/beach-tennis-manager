@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AuthenticatedView } from '../modules/auth/components/AuthenticatedView';
 import { LoginPage } from '../modules/auth/components/LoginPage';
-import { getAuthenticatedUser } from '../modules/auth/types';
+import { getAuthenticatedUser } from '../modules/auth/auth-api';
 import type { AuthUser } from '../modules/auth/types';
 
 type SessionState = 'loading' | 'anonymous' | 'authenticated' | 'unavailable';

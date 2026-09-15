@@ -172,8 +172,9 @@ As camadas internas devem depender de abstrações para acesso a dados e serviç
 - repositórios;
 - gerenciamento de transações;
 - hashing e verificação de credenciais;
-- geração de identificador de sessão aleatório;
-- persistência e validação da sessão no servidor;
+- emissão e verificação de Access Token JWT com a biblioteca `jose`;
+- geração de Refresh Token opaco aleatório;
+- persistência, rotação e revogação de refresh tokens no servidor;
 - armazenamento de comprovantes, se definido posteriormente;
 - logger e configuração da aplicação.
 
@@ -203,7 +204,7 @@ A comunicação será feita por HTTP usando JSON, salvo necessidades futuras doc
 Princípios propostos:
 
 - usar HTTPS fora do ambiente local;
-- enviar credenciais de sessão de forma segura;
+- enviar Access Token e Refresh Token de forma segura;
 - manter contratos de request e response versionáveis;
 - representar datas e valores monetários sem ambiguidades;
 - distinguir erro de validação, não autenticação, não autorização, conflito e falha interna;
@@ -220,7 +221,7 @@ Usar uma API REST orientada a recursos do domínio, com respostas JSON e contrat
 
 Recursos conceituais:
 
-- usuários e sessão;
+- usuários e autenticação;
 - professores;
 - alunos;
 - turmas;
@@ -255,14 +256,16 @@ A documentação de negócio não define a lista final de endpoints, convençõe
 
 O backend deve autenticar usuários e associar cada requisição a uma identidade autenticada. Credenciais não devem ser armazenadas em texto puro; devem ser protegidas por mecanismo apropriado de hashing.
 
-A autenticação utiliza sessão baseada em um identificador aleatório, persistida no servidor e enviada ao cliente por Cookie HttpOnly. O identificador de sessão não representa um JWT e não deve ser tratado como token JWT.
+A autenticação utiliza um Access Token JWT e um Refresh Token opaco aleatório, ambos enviados ao cliente por Cookie HttpOnly. O Access Token é emitido e verificado com a biblioteca `jose`, tem validade de 10 minutos e não é persistido no banco. O Refresh Token tem validade de 8 horas; somente o hash SHA-256 é persistido na tabela `refresh_tokens`. Cada uso do Refresh Token gera um novo token (rotação). A reutilização de um Refresh Token já substituído revoga toda a família correspondente. O Access Token não é revogado de imediato no logout; o Refresh Token é revogável no banco.
 
 Na primeira etapa, a autenticação disponibilizada é exclusiva para usuários com papel `ADMIN`. O usuário `ADMIN` não é um `Professor` e pode existir sem associação a um professor.
 
-Os endpoints implementados nesta etapa são:
+Os endpoints adotados para autenticação são:
 
-- `POST /auth/admin/login`: autentica o administrador e cria a sessão;
-- `GET /auth/me`: identifica o usuário autenticado a partir da sessão.
+- `POST /auth/admin/login`: autentica o administrador e emite Access Token e Refresh Token;
+- `GET /auth/me`: identifica o usuário autenticado a partir do Access Token;
+- `POST /auth/refresh`: troca um Refresh Token válido por um novo par de tokens;
+- `POST /auth/logout`: revoga o Refresh Token persistido e encerra os cookies.
 
 ### Autorização
 
@@ -279,7 +282,7 @@ A documentação não define permissões detalhadas por ação, inclusive se o a
 
 ## 9. Isolamento de dados entre professores
 
-O professor responsável deve ser identificado de forma confiável a partir da sessão autenticada, nunca de um identificador enviado pelo frontend como única proteção.
+O professor responsável deve ser identificado de forma confiável a partir da identidade autenticada no backend, nunca de um identificador enviado pelo frontend como única proteção.
 
 O backend deve aplicar o escopo do professor:
 
@@ -485,7 +488,7 @@ Registrar, conforme a necessidade:
 - falhas de integração e persistência;
 - eventos relevantes de negócio quando necessário para rastreabilidade.
 
-Não registrar senhas, identificadores de sessão, credenciais ou comprovantes em conteúdo inadequado. Logs não substituem o histórico de domínio: correções manuais de ciclos e informações financeiras devem preservar rastreabilidade de acordo com as regras.
+Não registrar senhas, Access Tokens, Refresh Tokens, credenciais ou comprovantes em conteúdo inadequado. Logs não substituem o histórico de domínio: correções manuais de ciclos e informações financeiras devem preservar rastreabilidade de acordo com as regras.
 
 ### Ponto em aberto
 
@@ -578,7 +581,8 @@ A adoção de `packages/contracts` para compartilhar contratos entre frontend e 
 | API | REST/JSON | Simples, explícita e adequada aos recursos e casos de uso iniciais. |
 | Documentação | OpenAPI | Torna o contrato verificável e útil para frontend, testes e portfólio. |
 | Ambiente | Docker Compose para desenvolvimento | Reproduzibilidade local, principalmente do PostgreSQL. |
-| Sessão/autenticação | Cookie HttpOnly | Protege a sessão contra acesso por JavaScript no navegador. |
+| Sessão/autenticação | JWT + Refresh Token em Cookie HttpOnly | Access Token de curta duração e Refresh Token opaco revogável, ambos inacessíveis ao JavaScript no navegador. |
+| Biblioteca JWT | jose | Emite e verifica o Access Token JWT em TypeScript, sem persistir o access no banco. |
 | Validação de entrada | Zod | Valida schemas de transporte com integração adequada ao TypeScript. |
 | Testes automatizados | Vitest | Executa testes unitários e de integração com uma configuração adequada ao TypeScript. |
 | Testes | Unitários, integração e frontend | Cobre regras críticas, persistência e experiência de uso. |
