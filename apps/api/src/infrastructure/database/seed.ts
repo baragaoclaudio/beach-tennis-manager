@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../../load-env.js';
 import argon2 from 'argon2';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';

@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './load-env.js';
 import cookie from '@fastify/cookie';
 import Fastify from 'fastify';
 import { database } from './infrastructure/database/connection.js';

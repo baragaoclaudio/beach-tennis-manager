@@ -334,6 +334,41 @@ describe('POST /auth/refresh', () => {
     expect(reuse.headers['set-cookie']).toBeUndefined();
   });
 
+  it('detects reuse of refresh token A after it was rotated to B', async () => {
+    const { refreshToken: refreshTokenA } = await login();
+    const rotation = await app.inject({
+      method: 'POST',
+      url: '/auth/refresh',
+      headers: { cookie: `${REFRESH_TOKEN_COOKIE_NAME}=${refreshTokenA}` }
+    });
+    const rotationCookies = setCookieHeaders(rotation);
+    const refreshTokenB = cookieValue(rotationCookies, REFRESH_TOKEN_COOKIE_NAME);
+    const accessTokenB = cookieValue(rotationCookies, ACCESS_TOKEN_COOKIE_NAME);
+
+    expect(rotation.statusCode).toBe(200);
+    expect(refreshTokenB).toBeDefined();
+    expect(accessTokenB).toBeDefined();
+    expect(refreshTokenB).not.toBe(refreshTokenA);
+    expect(rotationCookies.join('\n')).toMatch(new RegExp(`${ACCESS_TOKEN_COOKIE_NAME}=`));
+    expect(rotationCookies.join('\n')).toMatch(new RegExp(`${REFRESH_TOKEN_COOKIE_NAME}=`));
+
+    const reuse = await app.inject({
+      method: 'POST',
+      url: '/auth/refresh',
+      headers: { cookie: `${REFRESH_TOKEN_COOKIE_NAME}=${refreshTokenA}` }
+    });
+    const reuseBody = JSON.parse(reuse.body);
+
+    expect(reuse.statusCode).toBe(409);
+    expect(reuse.headers['set-cookie']).toBeUndefined();
+    expect(reuseBody).not.toHaveProperty('accessToken');
+    expect(reuseBody).not.toHaveProperty('refreshToken');
+    expect(reuseBody).not.toHaveProperty('user');
+    expect(JSON.stringify(reuseBody)).not.toContain(refreshTokenA);
+    expect(JSON.stringify(reuseBody)).not.toContain(refreshTokenB);
+    expect(JSON.stringify(reuseBody)).not.toContain(accessTokenB);
+  });
+
   it('rejects an expired refresh token', async () => {
     const token = opaqueRefreshTokenGenerator.generate();
     await database.insert(refreshTokens).values({

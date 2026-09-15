@@ -5,10 +5,13 @@
   "workspaces": ["apps/*"],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @beach-tennis-manager/api\" \"npm run dev -w @beach-tennis-manager/web\"",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   },
   "engines": { "node": ">=20.0.0" }
 }
