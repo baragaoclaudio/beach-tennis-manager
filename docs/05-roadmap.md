@@ -55,11 +55,16 @@ Estas decisões técnicas não são regras de negócio. As seguintes decisões j
 
 Permanece opcional a adoção de `packages/contracts` para compartilhar contratos entre frontend e backend.
 
-Antes do código, ainda precisam ser definidas:
+Já foram definidas e estão em uso:
 
-- forma de representar contratos;
-- convenções iniciais da API REST;
-- estratégia local de execução do PostgreSQL;
+- estratégia local de PostgreSQL com Docker Compose;
+- autenticação com Access Token JWT e Refresh Token opaco em Cookie HttpOnly;
+- endpoints atuais de autenticação: `POST /auth/admin/login`, `GET /auth/me`, `POST /auth/refresh` e `POST /auth/logout`.
+
+Ainda precisam ser definidas:
+
+- forma de representar contratos compartilhados, se `packages/contracts` for adotado;
+- convenções da API REST de domínio (além da autenticação já implementada);
 - plataforma de CI/CD e ambientes de execução, quando a automação for iniciada.
 
 As seguintes decisões de negócio também devem ser observadas antes das funcionalidades que dependem delas:
@@ -71,6 +76,12 @@ As seguintes decisões de negócio também devem ser observadas antes das funcio
 - conjunto completo de configurações operacionais, além do limite de reposições e prazo de ausência já documentados.
 
 As decisões já documentadas não devem ser reabertas como pendências. Isso inclui validade do crédito, turma de reposição do mesmo professor sem compatibilidade de nível, cancelamentos especificados, feriados, falta em reposição e encerramento da matrícula.
+
+## 4.1. Estado atual da implementação
+
+Já foram entregues a base do monorepo, o PostgreSQL local via Docker Compose, o Drizzle, a autenticação ADMIN com JWT e Refresh Token, e o cliente HTTP do frontend correspondente. O núcleo operacional de alunos, turmas, ciclos e isolamento por professor nas rotas de domínio **ainda não** foi implementado.
+
+A autenticação disponível hoje permite login de `ADMIN`, rejeita `PROFESSOR` em `POST /auth/admin/login` e persiste os papéis `ADMIN` e `PROFESSOR` no modelo de usuário. Isso não equivale a autorização por recurso nem a isolamento efetivo entre professores.
 
 ## 5. Fases do roadmap
 
@@ -96,6 +107,8 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 
 **Commit independente sugerido:** `docs: registrar decisões iniciais do projeto`.
 
+**Status: concluída.** Existem monorepo com npm Workspaces, decisões técnicas registradas, Docker Compose para PostgreSQL, configuração por `.env` na raiz, estrutura inicial das aplicações e scripts de instalação, desenvolvimento, testes, typecheck e build.
+
 ### Fase 1 — Estrutura inicial das aplicações
 
 **Objetivo:** criar a base do backend e do frontend de acordo com a arquitetura escolhida.
@@ -119,6 +132,8 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 - nenhuma regra de negócio está implementada em rota ou componente sem necessidade.
 
 **Commit independente sugerido:** `chore: criar estrutura inicial das aplicações`.
+
+**Status: concluída.** Existem `apps/api` (Node.js, TypeScript, Fastify) e `apps/web` (React, TypeScript, Vite), scripts de desenvolvimento, build e typecheck, e organização inicial do frontend. O backend responde a `GET /health`. O frontend renderiza a tela mínima, que nesta etapa é o fluxo de login `ADMIN`. `packages/contracts` continua opcional e não foi criado.
 
 ### Fase 2 — Backend base e contrato HTTP
 
@@ -146,6 +161,8 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 
 **Commit independente sugerido:** `feat(api): criar base do servidor e erros HTTP`.
 
+**Status: parcialmente concluída.** Já existem o servidor Fastify, a composição em `buildApp`, configuração por ambiente (`.env` na raiz), logging do Fastify, `GET /health` e convenção de erro `{ error: { category, message } }` nas rotas de autenticação. **Permanece pendente** um handler global/dedicado de erros: os mapeamentos nas rotas de auth não equivalem a esse tratamento para falhas inesperadas da API.
+
 ### Fase 3 — PostgreSQL e persistência base
 
 **Objetivo:** conectar o backend ao PostgreSQL com uma fronteira de persistência testável.
@@ -170,34 +187,57 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 
 **Commit independente sugerido:** `chore(api): configurar persistencia PostgreSQL`.
 
+**Status: parcialmente concluída.** Já existem PostgreSQL via Docker Compose, Drizzle ORM, schema e migrations (`users`, `professors`, `refresh_tokens`), seed do administrador, conexão do backend, portas/repositórios na autenticação e transações nos casos de uso de refresh. Os testes atuais exercitam o banco principalmente pelo fluxo de auth. **Permanece pendente** o teste de integração dedicado de conexão e persistência mínima com transação executada e revertida, isolado desse recorte. A modelagem e os módulos do núcleo operacional (alunos, turmas, ciclos etc.) não fazem parte desta fase e ainda não foram implementados.
+
+A base do frontend e o fluxo de login `ADMIN` na web já existem; isso não conclui o núcleo operacional do produto.
+
 ### Fase 4 — Usuário, Professor e autenticação
 
-**Objetivo:** permitir autenticação e identificar o professor autenticado.
+**Objetivo:** autenticar usuários, identificar o administrador autenticado nesta etapa e preparar a base para o professor e a autorização de domínio.
 
-**Entregas:**
+**Status:** parcialmente concluída. A autenticação ADMIN com JWT e Refresh Token está entregue. Login de `PROFESSOR`, middleware nas rotas de domínio e autorização/isolamento de recursos **permanecem pendentes**.
 
-- implementar os conceitos de Usuário e Professor;
-- representar os papéis `PROFESSOR` e `ADMIN`;
-- proteger credenciais com hashing;
-- implementar autenticação com Access Token JWT e Refresh Token opaco, ambos em Cookie HttpOnly;
-- persistir Refresh Tokens na tabela `refresh_tokens`, com hash SHA-256, rotação e detecção de reutilização;
-- disponibilizar login, identificação do usuário autenticado, renovação e encerramento da autenticação;
-- criar middleware ou mecanismo equivalente para contexto de autenticação.
+**Entregas realizadas:**
+
+- papéis `PROFESSOR` e `ADMIN` representados no usuário;
+- hash de senha com Argon2;
+- login exclusivo de `ADMIN` em `POST /auth/admin/login`, com rejeição de credencial inválida e de usuário `PROFESSOR` nesse endpoint;
+- Access Token JWT (HS256, 10 minutos) e Refresh Token opaco (8 horas) em Cookie HttpOnly (`btm_access`, `btm_refresh`);
+- persistência em `refresh_tokens` com hash SHA-256, família, rotação, `replaced_by_id`, `revoked_at` e `expires_at`;
+- detecção de reutilização de Refresh Token, com HTTP 409 e revogação da família;
+- `GET /auth/me`, `POST /auth/refresh` e `POST /auth/logout` (logout idempotente, HTTP 204; Access Token já emitido não é revogado de imediato);
+- testes automatizados da autenticação no backend;
+- cliente HTTP do frontend com `credentials: 'include'`, refresh automático em 401, single-flight e tratamento de 409 como sessão comprometida.
+
+**Entregas pendentes:**
+
+- login de `PROFESSOR`;
+- middleware ou contexto de autenticação aplicado às rotas de domínio;
+- autorização dos recursos de domínio;
+- isolamento efetivo dos dados por professor nas rotas e consultas de domínio.
 
 **Dependências:** Fases 2 e 3; decisão de autenticação da Fase 0.
 
-**Critérios de conclusão:**
+**Critérios de conclusão da etapa ADMIN já atendidos:**
 
-- usuário válido consegue autenticar;
+- administrador válido consegue autenticar;
 - credencial inválida é rejeitada sem exposição de informação sensível;
-- a requisição autenticada carrega identidade e papel;
-- testes cobrem autenticação e papéis básicos.
+- `/auth/me` identifica o usuário autenticado a partir do JWT e da consulta atual no banco;
+- testes cobrem login ADMIN, refresh, reuse detection e logout.
 
-**Commit independente sugerido:** `feat(auth): implementar autenticacao e papeis`.
+**Critérios ainda não atendidos (fase incompleta):**
+
+- professor autentica em endpoint próprio e opera no seu escopo;
+- requisições às rotas de domínio carregam contexto autenticado;
+- autorização e isolamento por professor estão aplicados e testados nos recursos de domínio.
+
+**Commit independente sugerido (já realizado no código):** autenticação ADMIN com JWT e Refresh Token.
 
 ### Fase 5 — Autorização e isolamento por professor
 
 **Objetivo:** impedir acesso ou alteração indevida entre operações de professores.
+
+**Status: pendente.** A regra de isolamento está documentada em `docs/02-regras-de-negocio.md` e em `docs/04-arquitetura.md`; a implementação nas rotas de domínio ainda não existe.
 
 **Entregas:**
 
@@ -514,6 +554,8 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 
 **Commit independente sugerido:** `docs(api): documentar contrato REST com OpenAPI`.
 
+OpenAPI permanece pendente.
+
 ### Fase 18 — Docker e ambiente reproduzível
 
 **Objetivo:** padronizar a execução local do projeto.
@@ -535,6 +577,8 @@ As decisões já documentadas não devem ser reabertas como pendências. Isso in
 - segredos não estão versionados.
 
 **Commit independente sugerido:** `chore: padronizar ambiente local com Docker`.
+
+O PostgreSQL via Docker Compose já é usado no desenvolvimento local. Esta fase permanece no planejamento para completar documentação e reprodução em máquina limpa; não está marcada como concluída.
 
 ### Fase 19 — CI/CD
 
@@ -647,21 +691,21 @@ Cada commit deve representar uma alteração compreensível e reversível. Exemp
 
 Commits que misturam regra de negócio, refatoração ampla e configuração de ambiente devem ser evitados.
 
-## 8. Primeira tarefa prática após aprovação
+## 8. Próxima tarefa prática
 
-A primeira tarefa de código recomendada é a **Fase 0, seguida da Fase 1**:
+A base executável e a autenticação ADMIN já existem. A próxima entrega recomendada é concluir as **pendências da Fase 4** e, em seguida, a **Fase 5**:
 
-1. registrar as decisões técnicas restantes, especialmente convenções da API e ambiente local;
-2. criar a estrutura inicial executável do backend Fastify e do frontend React com TypeScript;
-3. configurar scripts mínimos de typecheck, lint, teste e build;
-4. comprovar que backend e frontend iniciam e que o PostgreSQL será integrado na fase seguinte.
+1. login de `PROFESSOR`;
+2. middleware ou contexto de autenticação nas rotas de domínio;
+3. autorização dos recursos de domínio;
+4. isolamento efetivo dos dados por professor, com testes negativos.
 
-Essa primeira entrega cria uma base verificável sem antecipar regras de negócio ou modelagem de banco ainda não decididas.
+Não antecipar cadastros operacionais (alunos, turmas, ciclos) sem esse controle no backend.
 
 ## 9. Pontos em aberto do roadmap
 
 - adoção de `packages/contracts` para compartilhamento de contratos;
-- formato definitivo dos contratos;
+- convenções da API REST de domínio, além da autenticação já implementada;
 - plataforma de CI/CD, hospedagem e ambientes;
 - métricas, tracing, alertas e retenção de logs;
 - permissões detalhadas do administrador;

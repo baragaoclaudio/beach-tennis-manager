@@ -171,7 +171,7 @@ As camadas internas devem depender de abstrações para acesso a dados e serviç
 - Drizzle ORM;
 - repositórios;
 - gerenciamento de transações;
-- hashing e verificação de credenciais;
+- hashing e verificação de credenciais com Argon2;
 - emissão e verificação de Access Token JWT com a biblioteca `jose`;
 - geração de Refresh Token opaco aleatório;
 - persistência, rotação e revogação de refresh tokens no servidor;
@@ -188,10 +188,16 @@ Organização proposta:
 - componentes de tela e componentes compartilhados;
 - formulários e validações de apresentação;
 - clientes da API e contratos de transporte;
-- estado de autenticação e sessão;
+- estado de autenticação derivado do backend, sem guardar tokens no cliente;
 - estado de dados remotos e cache;
 - tratamento de carregamento, vazio e erro;
 - estilos e layout responsivo.
+
+O cliente HTTP da autenticação já implementada usa cookies HttpOnly gerenciados pelo navegador. O frontend não lê `btm_access` nem `btm_refresh`, não grava tokens em `localStorage` ou `sessionStorage` e não envia `Authorization: Bearer`. As requisições autenticadas usam `credentials: 'include'`.
+
+Quando uma requisição recebe HTTP 401, o cliente tenta `POST /auth/refresh` uma vez. Várias 401 simultâneas compartilham um único refresh em voo (single-flight). Se o refresh for bem-sucedido, a requisição original pode ser repetida. HTTP 409 no refresh é tratado como sessão comprometida: o cliente encerra o estado autenticado, direciona ao login e bloqueia novas tentativas de refresh até um login bem-sucedido.
+
+No desenvolvimento local, o Vite faz proxy de `/auth` para a API em `http://localhost:3333`.
 
 Módulos de interface podem acompanhar as áreas de alunos, professores, turmas, matrículas, aulas, ciclos, pagamentos, reposições, configurações e relatórios.
 
@@ -204,7 +210,7 @@ A comunicação será feita por HTTP usando JSON, salvo necessidades futuras doc
 Princípios propostos:
 
 - usar HTTPS fora do ambiente local;
-- enviar Access Token e Refresh Token de forma segura;
+- enviar Access Token e Refresh Token somente por Cookie HttpOnly, sem incluí-los no JSON;
 - manter contratos de request e response versionáveis;
 - representar datas e valores monetários sem ambiguidades;
 - distinguir erro de validação, não autenticação, não autorização, conflito e falha interna;
@@ -246,26 +252,42 @@ Boas práticas propostas:
 - não vazar dados de outro professor em listas, detalhes, filtros ou relatórios;
 - definir estratégia de compatibilidade quando contratos evoluírem.
 
-### Ponto em aberto
+Os endpoints de autenticação já estão definidos e implementados. A lista final de endpoints de domínio, bem como versionamento, paginação, ordenação e filtros, ainda não está definida e deve acompanhar a implementação dos casos de uso correspondentes.
 
-A documentação de negócio não define a lista final de endpoints, convenções de versionamento, paginação, ordenação ou filtros. Esses detalhes devem ser definidos ao desenhar a API concreta.
+### Endpoints de autenticação implementados
+
+- `POST /auth/admin/login`: autentica o administrador e emite Access Token e Refresh Token;
+- `GET /auth/me`: identifica o usuário autenticado a partir do Access Token;
+- `POST /auth/refresh`: troca um Refresh Token válido por um novo par de tokens;
+- `POST /auth/logout`: revoga o Refresh Token apresentado, quando existir, e limpa os cookies de autenticação.
 
 ## 8. Autenticação e autorização
 
 ### Autenticação
 
-O backend deve autenticar usuários e associar cada requisição a uma identidade autenticada. Credenciais não devem ser armazenadas em texto puro; devem ser protegidas por mecanismo apropriado de hashing.
+O backend deve autenticar usuários e associar cada requisição a uma identidade autenticada. Credenciais não devem ser armazenadas em texto puro. A implementação atual protege senhas com hashing Argon2.
 
-A autenticação utiliza um Access Token JWT e um Refresh Token opaco aleatório, ambos enviados ao cliente por Cookie HttpOnly. O Access Token é emitido e verificado com a biblioteca `jose`, tem validade de 10 minutos e não é persistido no banco. O Refresh Token tem validade de 8 horas; somente o hash SHA-256 é persistido na tabela `refresh_tokens`. Cada uso do Refresh Token gera um novo token (rotação). A reutilização de um Refresh Token já substituído revoga toda a família correspondente. O Access Token não é revogado de imediato no logout; o Refresh Token é revogável no banco.
+Na etapa atual, o login implementado é exclusivo para usuários com papel `ADMIN`. O usuário `ADMIN` não é um `Professor` e pode existir sem associação a um professor. O login de `PROFESSOR` ainda não está implementado.
 
-Na primeira etapa, a autenticação disponibilizada é exclusiva para usuários com papel `ADMIN`. O usuário `ADMIN` não é um `Professor` e pode existir sem associação a um professor.
+A autenticação utiliza um Access Token JWT e um Refresh Token opaco aleatório. Ambos são enviados ao cliente somente por Cookie HttpOnly. Os nomes dos cookies são `btm_access` (Access Token) e `btm_refresh` (Refresh Token). Os cookies usam `SameSite=Lax`, `Path=/` e a flag `Secure` em produção. O frontend não lê esses cookies.
 
-Os endpoints adotados para autenticação são:
+O Access Token é emitido e verificado com a biblioteca `jose`, algoritmo HS256, validade de 10 minutos, e não é persistido no banco. As claims usadas são `sub`, `email`, `role`, `iat` e `exp`. O segredo de assinatura vem da variável de ambiente `JWT_SECRET`, com comprimento mínimo de 32 caracteres.
 
-- `POST /auth/admin/login`: autentica o administrador e emite Access Token e Refresh Token;
-- `GET /auth/me`: identifica o usuário autenticado a partir do Access Token;
-- `POST /auth/refresh`: troca um Refresh Token válido por um novo par de tokens;
-- `POST /auth/logout`: revoga o Refresh Token persistido e encerra os cookies.
+O Refresh Token tem validade de 8 horas. Somente o hash SHA-256 é persistido. Os valores dos tokens não são devolvidos no JSON. As respostas de login e de refresh contêm somente `{ user }`.
+
+### Persistência e rotação do Refresh Token
+
+A tabela `refresh_tokens` é persistida no PostgreSQL. Cada família de refresh tokens agrupa as rotações de uma cadeia. A cada uso válido o token é rotacionado: o token apresentado passa a referenciar o sucessor por `replaced_by_id`, e um novo token opaco é emitido. `revoked_at` registra revogação; `expires_at` registra expiração. O `token_hash` é único.
+
+A rotação ocorre em transação com bloqueio da linha correspondente. A reutilização de um Refresh Token já substituído responde HTTP 409 e revoga a família. As demais falhas de refresh (ausência, inexistência, expiração ou revogação) respondem HTTP 401.
+
+### `GET /auth/me`
+
+O endpoint valida o Access Token JWT, obtém a identidade pelo `sub`, consulta novamente o usuário no banco e verifica o estado atual, incluindo `isActive`. O `role` presente no JWT não é a única fonte de autorização.
+
+### `POST /auth/logout`
+
+O logout é idempotente e responde HTTP 204. Quando o cookie `btm_refresh` está presente, o Refresh Token correspondente é revogado no banco. Os cookies de autenticação são limpos. O Access Token já emitido não é revogado imediatamente; permanece válido até expirar naturalmente.
 
 ### Autorização
 
@@ -274,7 +296,11 @@ A autorização deve considerar o papel do usuário:
 - `PROFESSOR`: acesso à própria operação, conforme as relações permitidas;
 - `ADMIN`: acesso global, incluindo consulta de professores, alunos, turmas e relatórios consolidados e administração das configurações globais.
 
-A autorização deve ser verificada no backend em cada caso de uso relevante. Deve existir uma distinção clara entre estar autenticado e poder acessar ou alterar determinado recurso.
+A autorização deve ser verificada no backend em cada caso de uso relevante. Deve existir uma distinção clara entre estar autenticado e poder acessar ou alterar determinado recurso. O isolamento entre professores é uma regra de negócio e um requisito arquitetural; o middleware e o controle de acesso das rotas de domínio ainda não foram implementados.
+
+### Estado atual desta etapa
+
+Ainda existe residual da migração incremental de sessão opaca para JWT e Refresh Token: o cookie `btm_session` e o `SessionRepository`. O login de `PROFESSOR` ainda não está implementado. Não há middleware de autenticação ou autorização aplicado às rotas de domínio.
 
 ### Ponto em aberto
 
@@ -295,6 +321,8 @@ O backend deve aplicar o escopo do professor:
 A relação aluno-professor ocorre por meio das matrículas. O mesmo aluno pode aparecer para mais de um professor, sem duplicação cadastral. Isso exige que consultas respeitem o relacionamento operacional do professor e não tratem o cadastro global do aluno como autorização automática para todos os seus dados.
 
 Administradores possuem visão global conforme as regras documentadas.
+
+Esse isolamento deve ser aplicado no backend quando existirem recursos de domínio. Ele ainda não está implementado como middleware ou controle de acesso nas rotas de domínio.
 
 Testes de autorização devem tentar acessar recursos de outro professor e verificar que o backend nega ou não expõe os dados, conforme o contrato definido.
 
@@ -330,7 +358,7 @@ Validações de formato não devem ser apresentadas como regras de negócio nova
 
 PostgreSQL é a base adotada para persistência transacional do sistema. Deve armazenar os dados operacionais e históricos com integridade referencial, transações e controles de acesso adequados.
 
-A modelagem concreta de tabelas, colunas e migrations não faz parte deste documento.
+A modelagem concreta de todo o domínio ainda não está completa neste documento nem no schema. Nesta etapa já existem persistência concreta, via Drizzle, para `users`, `professors` e `refresh_tokens`. A tabela `professors` existe no schema; não há módulo HTTP nem casos de uso de professor implementados. Este documento não lista o catálogo completo de colunas.
 
 ### ORM
 
@@ -354,7 +382,8 @@ Operações que alterem mais de um elemento relacionado devem ser atômicas. Iss
 - registrar participação e gerar crédito quando aplicável;
 - utilizar crédito e registrar a aula de reposição;
 - iniciar ciclo e persistir suas configurações congeladas;
-- registrar pagamento e sua relação com o ciclo.
+- registrar pagamento e sua relação com o ciclo;
+- rotacionar Refresh Tokens com bloqueio da linha persistida.
 
 A fronteira exata de cada transação deve acompanhar o caso de uso, sem espalhar controle transacional pelo frontend.
 
@@ -420,9 +449,9 @@ A documentação não define uma meta numérica de cobertura. A cobertura deve s
 
 ## 14. Documentação da API
 
-### Decisão proposta
+### Decisão proposta, ainda não entregue
 
-Documentar a API com OpenAPI, mantendo a especificação próxima do backend e disponibilizando uma visualização para desenvolvimento.
+A API deve ser documentada com OpenAPI no futuro, conforme o roadmap, mantendo a especificação próxima do backend. Essa especificação ainda não está publicada nem implementada no repositório.
 
 A documentação deve descrever:
 
@@ -442,6 +471,17 @@ A especificação da API não deve inventar regras de negócio. Deve refletir os
 ### Decisão proposta
 
 Usar Docker Compose para disponibilizar o PostgreSQL localmente e, quando útil, os serviços da aplicação. O ambiente deve permitir que um novo desenvolvedor execute o projeto com instruções claras e configuração por variáveis de ambiente.
+
+O que já está em uso no desenvolvimento local:
+
+- arquivo `.env` na raiz do monorepo;
+- a API resolve as variáveis de ambiente a partir da raiz do workspace, não apenas do diretório de trabalho de `apps/api`;
+- `JWT_SECRET` configurado por ambiente;
+- `ADMIN_EMAIL` e `ADMIN_PASSWORD` utilizados pelo seed do administrador;
+- PostgreSQL via Docker Compose;
+- API em `localhost:3333`;
+- frontend Vite em `localhost:5173`;
+- `npm run dev` na raiz inicia API e frontend em paralelo.
 
 Princípios:
 
@@ -513,55 +553,68 @@ A arquitetura deve contemplar:
 
 A proteção deve considerar que o cliente pode ser adulterado. Nenhum identificador, filtro, papel ou valor enviado pelo frontend deve ser aceito como prova de autorização.
 
-## 19. Estrutura inicial de diretórios
+## 19. Estrutura de diretórios
 
-A estrutura abaixo é conceitual e pode ser refinada quando o repositório for implementado:
+O repositório já existe. A árvore abaixo distingue o que está no código hoje da organização alvo para o domínio. A estrutura alvo pode ser refinada; não obriga cada entidade a possuir um serviço próprio. Os módulos devem ser agrupados por responsabilidade e podem compartilhar casos de uso ou políticas quando isso representar melhor o domínio.
+
+### A) Estrutura real atual
 
 ```text
 beach-tennis-manager/
+├── .cursor/
+│   └── rules/
+│       └── projeto-global.mdc
+├── .env.example
+├── .gitignore
+├── README.md
+├── docker-compose.yml
+├── package.json
 ├── docs/
 │   ├── 01-visao-e-requisitos.md
 │   ├── 02-regras-de-negocio.md
 │   ├── 03-modelo-de-dominio.md
-│   └── 04-arquitetura.md
+│   ├── 04-arquitetura.md
+│   └── 05-roadmap.md
 ├── apps/
 │   ├── api/
+│   │   ├── drizzle.config.ts
+│   │   ├── drizzle/
+│   │   │   └── migrations/
+│   │   ├── package.json
 │   │   └── src/
-│   │       ├── modules/
-│   │       │   ├── users/
-│   │       │   ├── professors/
-│   │       │   ├── students/
-│   │       │   ├── classes/
-│   │       │   ├── enrollments/
-│   │       │   ├── lessons/
-│   │       │   ├── attendance/
-│   │       │   ├── billing-cycles/
-│   │       │   ├── payments/
-│   │       │   ├── makeups/
-│   │       │   └── settings/
-│   │       ├── shared/
-│   │       │   ├── domain/
-│   │       │   ├── application/
-│   │       │   ├── infrastructure/
-│   │       │   └── http/
-│   │       └── main/
+│   │       ├── app.ts
+│   │       ├── main.ts
+│   │       ├── load-env.ts
+│   │       ├── infrastructure/
+│   │       │   ├── auth/
+│   │       │   └── database/
+│   │       └── modules/
+│   │           └── auth/
 │   └── web/
+│       ├── index.html
+│       ├── package.json
+│       ├── vite.config.ts
 │       └── src/
 │           ├── app/
-│           ├── modules/
-│           ├── components/
-│           ├── services/
-│           └── shared/
-├── packages/
-│   └── contracts/
-├── tests/
-├── docker-compose.yml
-└── README.md
+│           ├── main.tsx
+│           └── modules/
+│               └── auth/
+└── package-lock.json
 ```
 
-O diretório `packages/contracts` é uma possibilidade conceitual e somente será adotado se a decisão futura sobre monorepo e compartilhamento de contratos entre frontend e backend for aprovada.
+Não existem, nesta etapa, módulos de domínio como `students`, `classes`, `enrollments`, `lessons`, `attendance`, `billing-cycles`, `payments`, `makeups` ou `settings`. Não há `packages/contracts`.
 
-Essa estrutura não obriga cada entidade a possuir um serviço próprio. Os módulos devem ser agrupados por responsabilidade e podem compartilhar casos de uso ou políticas quando isso representar melhor o domínio.
+### B) Estrutura alvo planejada para o domínio
+
+À medida que os casos de uso forem implementados, o backend deve ganhar módulos por responsabilidade de domínio, por exemplo:
+
+- `users/`, `professors/`, `students/`, `classes/`;
+- `enrollments/`, `lessons/`, `attendance/`;
+- `billing-cycles/`, `payments/`, `makeups/`, `settings/`.
+
+O frontend deve acompanhar essa organização por funcionalidade (`app/`, `modules/`, componentes e clientes HTTP compartilhados), além do módulo `auth` já existente.
+
+O diretório `packages/contracts` permanece uma possibilidade conceitual e somente será adotado se a decisão futura sobre compartilhamento de contratos entre frontend e backend for aprovada.
 
 ### Ponto em aberto
 
@@ -579,8 +632,8 @@ A adoção de `packages/contracts` para compartilhar contratos entre frontend e 
 | Domínio | Entidades e políticas independentes de framework | Facilita testes e evita acoplamento das regras ao transporte ou ao banco. |
 | ORM | Drizzle ORM | Bom suporte a TypeScript/PostgreSQL, schema tipado e ergonomia. |
 | API | REST/JSON | Simples, explícita e adequada aos recursos e casos de uso iniciais. |
-| Documentação | OpenAPI | Torna o contrato verificável e útil para frontend, testes e portfólio. |
-| Ambiente | Docker Compose para desenvolvimento | Reproduzibilidade local, principalmente do PostgreSQL. |
+| Documentação da API | OpenAPI no futuro, ainda não publicado | Contrato verificável permanece no roadmap; não há especificação OpenAPI no repositório. |
+| Ambiente | Docker Compose para PostgreSQL; `.env` na raiz; `npm run dev` sobe API e web | Reproduzibilidade local e um comando único de desenvolvimento. |
 | Sessão/autenticação | JWT + Refresh Token em Cookie HttpOnly | Access Token de curta duração e Refresh Token opaco revogável, ambos inacessíveis ao JavaScript no navegador. |
 | Biblioteca JWT | jose | Emite e verifica o Access Token JWT em TypeScript, sem persistir o access no banco. |
 | Validação de entrada | Zod | Valida schemas de transporte com integração adequada ao TypeScript. |
@@ -614,7 +667,7 @@ Os seguintes pontos permanecem pendentes porque a documentação de requisitos e
 - cálculo exato do faturamento e dos indicadores financeiros;
 - relatórios obrigatórios na primeira versão;
 - regras detalhadas de cobrança e pagamento além do registro básico;
-- lista final de endpoints e convenções de versionamento da API;
+- lista final de endpoints de domínio e convenções de versionamento da API, além dos endpoints de autenticação já implementados;
 - conjunto completo de configurações operacionais além das já documentadas;
 - formato concreto da persistência do snapshot, sem alterar seu requisito funcional;
 - plataforma de CI/CD, hospedagem, ambientes e estratégia de deploy;
