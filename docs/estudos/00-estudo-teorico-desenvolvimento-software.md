@@ -1,41 +1,212 @@
-# Estudo Teórico --- Desenvolvimento de Software
+# Estudo Teórico — Desenvolvimento de Software
 
-> Material de preparação para entrevistas técnicas --- níveis Junior e
-> Pleno.
+> Guia didático de preparação para entrevistas técnicas — níveis Junior e Pleno.
 >
-> Objetivo: revisar fundamentos, entender os conceitos de verdade e
-> conseguir explicá-los com clareza durante uma entrevista, relacionando
-> a teoria com situações práticas do projeto **Beach Tennis Manager**.
+> Objetivo: entender os conceitos de verdade, saber explicar cada termo técnico com clareza e relacionar teoria, código, testes e arquitetura ao projeto **Beach Tennis Manager**.
 
-------------------------------------------------------------------------
+---
 
-# 1. Como estudar este material
+# 1. Como usar este material
 
 Não tente decorar respostas prontas.
 
 Para cada assunto, procure conseguir responder:
 
-1.  **O que é?**
-2.  **Por que existe?**
-3.  **Quando eu usaria?**
-4.  **Consegue dar um exemplo?**
+1. O que é?
+2. Por que existe?
+3. Qual problema resolve?
+4. Como funciona?
+5. Quando eu usaria?
+6. Quando eu evitaria?
+7. Consegue dar um exemplo?
+8. Como isso apareceria no Beach Tennis Manager?
 
-Uma boa resposta começa com uma definição simples, explica o motivo e
-termina com um exemplo prático.
+Uma boa resposta de entrevista normalmente segue:
 
-------------------------------------------------------------------------
+**definição → motivo → exemplo → trade-off → aplicação prática.**
 
-# 2. Nível Junior
+### O que é um trade-off?
 
-## 2.1 O que é uma classe?
+Trade-off é uma escolha em que ganhar uma característica normalmente significa abrir mão de outra.
 
-Uma **classe** é uma estrutura que define características e
-comportamentos que objetos daquele tipo podem possuir.
+Exemplo:
 
-Ela funciona como um modelo e pode possuir atributos, métodos,
-construtores e regras.
+- uma solução muito simples pode ser fácil de manter;
+- uma solução muito genérica pode ser mais flexível;
+- porém, a solução genérica pode aumentar a complexidade.
 
-``` typescript
+Portanto, desenvolvimento de software não é apenas perguntar "qual é a melhor tecnologia?", mas também:
+
+> "Qual solução resolve este problema com complexidade adequada?"
+
+---
+
+# PARTE I — FUNDAMENTOS
+
+# 2. O que é programação?
+
+Programação é o processo de escrever instruções que um computador consegue executar para produzir determinado comportamento.
+
+Um programa recebe informações, processa essas informações e produz algum resultado.
+
+Exemplo:
+
+```typescript
+function calcularTotal(valor: number, quantidade: number): number {
+  return valor * quantidade;
+}
+```
+
+A função recebe dois valores, realiza uma operação e devolve um resultado.
+
+## Por que isso importa?
+
+Antes de aprender arquitetura, padrões e frameworks, precisamos entender o básico:
+
+```text
+entrada
+  ↓
+processamento
+  ↓
+saída
+```
+
+Uma API, por exemplo, também segue essa ideia:
+
+```text
+requisição HTTP
+  ↓
+validação
+  ↓
+regra de negócio
+  ↓
+banco
+  ↓
+resposta HTTP
+```
+
+---
+
+# 3. Variável
+
+Uma variável é um nome associado a um valor que o programa utiliza durante sua execução.
+
+```typescript
+const nome = "João";
+let idade = 28;
+```
+
+`nome` e `idade` são variáveis.
+
+## const x let
+
+`const` impede a reatribuição da variável.
+
+```typescript
+const nome = "João";
+// nome = "Maria"; // erro
+```
+
+`let` permite reatribuição:
+
+```typescript
+let idade = 28;
+idade = 29;
+```
+
+Isso não significa que objetos declarados com `const` sejam completamente imutáveis.
+
+```typescript
+const aluno = {
+  nome: "João",
+};
+
+aluno.nome = "Maria";
+```
+
+A referência não mudou, mas uma propriedade do objeto foi alterada.
+
+---
+
+# 4. Tipos
+
+Um tipo descreve que espécie de valor estamos manipulando.
+
+Em TypeScript podemos ter:
+
+```typescript
+const nome: string = "João";
+const idade: number = 28;
+const ativo: boolean = true;
+```
+
+Também podemos criar tipos próprios:
+
+```typescript
+type Aluno = {
+  id: string;
+  nome: string;
+};
+```
+
+## TypeScript garante tudo em tempo de execução?
+
+Não.
+
+TypeScript ajuda principalmente durante desenvolvimento e compilação.
+
+Se uma API recebe JSON vindo da internet, o conteúdo real pode não obedecer ao tipo declarado.
+
+Por isso validação de entrada continua sendo importante.
+
+Exemplo com Zod:
+
+```typescript
+const schema = z.object({
+  nome: z.string(),
+  idade: z.number().int().positive(),
+});
+```
+
+Aqui estamos verificando os dados que realmente chegaram.
+
+---
+
+# 5. Função
+
+Uma função agrupa um comportamento que pode receber dados e produzir um resultado.
+
+```typescript
+function somar(a: number, b: number): number {
+  return a + b;
+}
+```
+
+- `a` e `b` são parâmetros.
+- `2` e `3`, em `somar(2, 3)`, são argumentos.
+- `number` depois dos parênteses indica o tipo retornado.
+
+## Parâmetro x argumento
+
+```typescript
+function saudar(nome: string) {
+  return `Olá ${nome}`;
+}
+
+saudar("Claudio");
+```
+
+`nome` é parâmetro.
+
+`"Claudio"` é argumento.
+
+---
+
+# 6. O que é uma classe?
+
+Uma classe é uma estrutura usada para representar um tipo de objeto, reunindo dados e comportamentos relacionados.
+
+```typescript
 class Aluno {
   constructor(
     public nome: string,
@@ -48,85 +219,74 @@ class Aluno {
 }
 ```
 
-**Resposta de entrevista:**
+A classe descreve o que um `Aluno` possui e faz.
 
-> "Classe é uma estrutura que representa um tipo de objeto, definindo
-> seus dados e comportamentos."
+---
 
-------------------------------------------------------------------------
+# 7. O que é um objeto?
 
-## 2.2 O que é um objeto?
+Um objeto é uma instância concreta de uma classe.
 
-Um **objeto** é uma instância de uma classe.
-
-``` typescript
+```typescript
 const aluno = new Aluno("João", 25);
 ```
 
-Aqui `Aluno` é a classe e `aluno` é o objeto.
+Aqui:
 
-Podemos ter vários objetos da mesma classe:
+```text
+Aluno = classe
+aluno = objeto
+```
 
-``` typescript
+Podemos criar vários objetos:
+
+```typescript
 const aluno1 = new Aluno("João", 25);
 const aluno2 = new Aluno("Maria", 30);
 ```
 
-------------------------------------------------------------------------
+A classe funciona como uma definição; os objetos são instâncias concretas.
 
-# 3. Quais linguagens você programa?
+---
 
-A resposta deve refletir sua experiência real.
+# PARTE II — ORIENTAÇÃO A OBJETOS
 
-Uma resposta possível:
+# 8. O que é OOP?
 
-> "Minha experiência principal é com PHP e Laravel no backend,
-> JavaScript e TypeScript, principalmente com Angular e Ionic. Também
-> trabalhei com MySQL e SQL Server. Atualmente estou aprofundando uma
-> stack com Node.js, TypeScript, Fastify, React, PostgreSQL e Docker."
+OOP significa **Object-Oriented Programming**, ou Programação Orientada a Objetos.
 
-Não liste tecnologias que você não conseguiria explicar se o
-entrevistador aprofundasse.
+É um paradigma de programação que organiza o software em torno de objetos que possuem dados e comportamentos.
 
-------------------------------------------------------------------------
+Os conceitos tradicionalmente associados são:
 
-# 4. Qual foi a coisa mais legal que você fez?
+- encapsulamento;
+- abstração;
+- herança;
+- polimorfismo.
 
-Essa pergunta procura entender experiência prática, capacidade de
-resolver problemas, impacto e autonomia.
+Esses conceitos não devem ser apenas decorados. Eles existem para ajudar a organizar responsabilidades e controlar a complexidade do software.
 
-Use:
+---
 
-**Contexto → Ação → Resultado**
+# 9. Encapsulamento
 
-> "Em um projeto, tínhamos um problema de X. Eu fiquei responsável por
-> Y. Implementei Z e o resultado foi W."
+Encapsulamento significa controlar como o estado interno de um objeto pode ser acessado ou alterado.
 
-Evite apenas dizer que fez "um sistema muito grande".
+Imagine uma conta bancária.
 
-------------------------------------------------------------------------
+Não queremos que qualquer parte do programa possa fazer:
 
-# 5. Principais conceitos de OOP
+```typescript
+conta.saldo = -100000;
+```
 
-OOP significa **Object-Oriented Programming**, ou Programação Orientada
-a Objetos.
+Podemos proteger o estado:
 
-Os quatro conceitos tradicionalmente associados são:
-
-1.  Encapsulamento
-2.  Abstração
-3.  Herança
-4.  Polimorfismo
-
-## Encapsulamento
-
-Esconde detalhes internos e controla como um objeto pode ser manipulado.
-
-``` typescript
+```typescript
 class Conta {
   private saldo = 0;
 
-  depositar(valor: number) {
+  depositar(valor: number): void {
     if (valor <= 0) {
       throw new Error("Valor inválido");
     }
@@ -134,365 +294,293 @@ class Conta {
     this.saldo += valor;
   }
 
-  consultarSaldo() {
+  consultarSaldo(): number {
     return this.saldo;
   }
 }
 ```
 
-## Abstração
+Agora o objeto controla como seu saldo pode mudar.
 
-Representa apenas os aspectos relevantes de algo, escondendo detalhes
-desnecessários.
+## O que é estado?
 
-## Herança
+Estado são os dados que representam a situação atual de um objeto.
 
-Permite que uma classe derive características e comportamentos de outra.
+No exemplo:
 
-``` typescript
+```text
+saldo = 500
+```
+
+é parte do estado da conta.
+
+## O que é uma regra/invariante?
+
+Uma invariante é uma condição que deve continuar verdadeira enquanto o objeto estiver válido.
+
+Por exemplo:
+
+> saldo não pode ser alterado por uma operação inválida.
+
+O encapsulamento ajuda a proteger essas condições.
+
+---
+
+# 10. Abstração
+
+Abstração significa representar aquilo que é relevante para determinado contexto e esconder detalhes desnecessários.
+
+Imagine dirigir um carro.
+
+Você utiliza:
+
+```text
+acelerador
+freio
+volante
+```
+
+Não precisa conhecer cada detalhe da combustão interna para dirigir.
+
+No software acontece algo parecido.
+
+Um serviço pode oferecer:
+
+```typescript
+paymentService.charge(payment);
+```
+
+O código que utiliza o serviço não precisa conhecer todos os detalhes internos da integração com o provedor.
+
+---
+
+# 11. Herança
+
+Herança permite que uma classe seja baseada em outra.
+
+```typescript
 class Animal {
-  comer() {}
+  comer(): void {
+    console.log("Comendo");
+  }
 }
 
 class Cachorro extends Animal {
-  latir() {}
+  latir(): void {
+    console.log("Au");
+  }
 }
 ```
 
-## Polimorfismo
+`Cachorro` herda o comportamento de `Animal`.
 
-Permite que diferentes tipos respondam de maneiras diferentes à mesma
-abstração.
+Herança pode ser útil quando existe uma relação realmente forte de especialização.
 
-``` typescript
+Mas hierarquias profundas podem aumentar o acoplamento.
+
+---
+
+# 12. Polimorfismo
+
+Polimorfismo significa que diferentes implementações podem ser utilizadas através de uma mesma abstração.
+
+```typescript
 interface Notificacao {
-  enviar(): void;
+  enviar(mensagem: string): void;
 }
 
-class Email implements Notificacao {
-  enviar() {
-    console.log("Enviando email");
+class EmailNotificacao implements Notificacao {
+  enviar(mensagem: string): void {
+    console.log(`Email: ${mensagem}`);
   }
 }
 
-class WhatsApp implements Notificacao {
-  enviar() {
-    console.log("Enviando WhatsApp");
+class WhatsAppNotificacao implements Notificacao {
+  enviar(mensagem: string): void {
+    console.log(`WhatsApp: ${mensagem}`);
   }
 }
 ```
 
-------------------------------------------------------------------------
+Podemos trabalhar com:
 
-# 6. Classe abstrata x Interface
+```typescript
+function notificar(
+  notificacao: Notificacao,
+  mensagem: string,
+) {
+  notificacao.enviar(mensagem);
+}
+```
 
-**Classe abstrata:** pode fornecer implementação, estado e métodos
-abstratos.
+O código consumidor não precisa conhecer qual implementação concreta recebeu.
 
-**Interface:** normalmente define um contrato.
+---
 
-``` typescript
+# 13. Interface
+
+Uma interface define um contrato.
+
+Contrato significa:
+
+> "Quem implementar isso precisa oferecer estas operações."
+
+```typescript
+interface StudentRepository {
+  findById(id: string): Promise<Student | null>;
+  save(student: Student): Promise<void>;
+}
+```
+
+A interface não precisa saber se o armazenamento será:
+
+```text
+PostgreSQL
+MySQL
+memória
+API externa
+fake de teste
+```
+
+Ela descreve o que o consumidor precisa.
+
+---
+
+# 14. Classe abstrata x interface
+
+Uma classe abstrata pode possuir:
+
+- estado;
+- métodos implementados;
+- métodos abstratos;
+- comportamento compartilhado.
+
+Uma interface é principalmente um contrato.
+
+Exemplo:
+
+```typescript
 interface Notificacao {
   enviar(mensagem: string): void;
 }
 ```
 
-Uma resposta boa:
+Uma classe abstrata:
 
-> "Uso interface principalmente para definir contratos e reduzir
-> acoplamento. Uma classe abstrata faz sentido quando existe
-> comportamento ou estado compartilhado entre implementações."
+```typescript
+abstract class Relatorio {
+  abstract gerar(): string;
 
-------------------------------------------------------------------------
-
-# 7. Boas práticas
-
-Algumas boas práticas:
-
--   nomes claros;
--   funções pequenas;
--   evitar duplicação desnecessária;
--   separar responsabilidades;
--   baixo acoplamento;
--   alta coesão;
--   validação de entrada;
--   tratamento adequado de erros;
--   testes automatizados;
--   controle de versão;
--   documentação das decisões importantes;
--   princípios SOLID;
--   segurança;
--   código legível.
-
-Boa prática não significa aplicar uma regra cegamente. O contexto
-importa.
-
-------------------------------------------------------------------------
-
-# 8. Frameworks
-
-Seu histórico inclui:
-
--   Laravel;
--   Angular;
--   Ionic;
--   atualmente Fastify e React no projeto de estudo/portfólio.
-
-Esteja preparado para explicar arquitetura, ciclo de requisição,
-middleware/hooks, ORM, validação, autenticação, testes e organização.
-
-------------------------------------------------------------------------
-
-# 9. DevOps / Infraestrutura
-
-DevOps não é apenas Docker.
-
-Conceitos importantes:
-
--   Linux;
--   Docker;
--   Docker Compose;
--   CI/CD;
--   pipelines;
--   ambientes;
--   variáveis de ambiente;
--   logs;
--   monitoramento;
--   deploy;
--   redes;
--   DNS;
--   reverse proxy;
--   HTTPS;
--   gerenciamento de secrets;
--   observabilidade.
-
-No projeto atual já estão sendo praticados Docker Compose, PostgreSQL em
-container, variáveis de ambiente, Git, GitHub, testes e execução de
-API/frontend.
-
-------------------------------------------------------------------------
-
-# 10. Versionadores de código
-
-O principal sistema de controle de versão moderno é o **Git**.
-
-Conceitos:
-
--   repository;
--   commit;
--   branch;
--   merge;
--   rebase;
--   remote;
--   fetch;
--   pull;
--   push;
--   tag;
--   cherry-pick;
--   revert;
--   stash.
-
-### Git x GitHub
-
-**Git** é o sistema de controle de versão.
-
-**GitHub** é uma plataforma que hospeda repositórios Git e oferece
-recursos como Pull Requests, Issues, Actions e revisão de código.
-
-------------------------------------------------------------------------
-
-# 11. Por que composição em vez de herança?
-
-**Composition over inheritance** significa preferir montar
-comportamentos por meio de objetos/dependências em vez de criar
-hierarquias profundas de herança.
-
-Composição tende a oferecer:
-
--   menor acoplamento;
--   maior flexibilidade;
--   facilidade para trocar comportamentos;
--   menor risco de hierarquias complexas;
--   testes mais simples em muitos casos.
-
-Isso não significa que herança seja proibida.
-
-------------------------------------------------------------------------
-
-# 12. O que é uma função pura?
-
-Uma função pura possui duas características:
-
-1.  Para a mesma entrada, produz sempre a mesma saída.
-2.  Não possui efeitos colaterais observáveis.
-
-``` typescript
-function somar(a: number, b: number): number {
-  return a + b;
+  salvar(): void {
+    console.log("Salvando relatório");
+  }
 }
 ```
 
-Efeitos colaterais incluem:
+### Como responder na entrevista?
 
--   alterar variável externa;
--   escrever arquivo;
--   acessar banco;
--   fazer requisição HTTP;
--   modificar estado compartilhado.
+> "Interface é útil para definir contratos e permitir diferentes implementações. Classe abstrata faz mais sentido quando existe comportamento ou estado compartilhado entre classes relacionadas."
 
-Funções puras facilitam testes e previsibilidade.
+---
 
-------------------------------------------------------------------------
+# 15. Composição
 
-# 13. Verbos HTTP
+Composição significa construir um objeto utilizando outros objetos/dependências.
 
-  Método   Uso comum
-  -------- -----------------------
-  GET      Consultar
-  POST     Criar/processar
-  PUT      Substituir um recurso
-  PATCH    Alterar parcialmente
-  DELETE   Remover
-
-### PUT x PATCH
-
-**PUT** normalmente representa substituição do recurso.
-
-**PATCH** representa alteração parcial.
-
-------------------------------------------------------------------------
-
-# 14. Status Codes
-
-## 2xx --- sucesso
-
--   **200 OK** --- sucesso.
--   **201 Created** --- recurso criado.
--   **204 No Content** --- sucesso sem conteúdo no corpo.
-
-## 3xx --- redirecionamento
-
--   **301 Moved Permanently** --- recurso movido permanentemente.
--   **304 Not Modified** --- relacionado a mecanismos
-    condicionais/cache.
-
-## 4xx --- erro do cliente
-
--   **400 Bad Request** --- requisição inválida.
--   **401 Unauthorized** --- autenticação ausente ou inválida.
--   **403 Forbidden** --- autenticado, mas sem permissão.
--   **404 Not Found** --- recurso não encontrado.
--   **409 Conflict** --- conflito com o estado atual.
-
-## 5xx --- erro do servidor
-
--   **500 Internal Server Error** --- erro interno.
--   **502 Bad Gateway** --- resposta inválida recebida por servidor
-    intermediário.
--   **503 Service Unavailable** --- serviço indisponível.
-
-------------------------------------------------------------------------
-
-# 15. Bancos de dados
-
-Seu histórico inclui:
-
--   MySQL;
--   SQL Server;
--   PostgreSQL no projeto atual.
-
-Esteja preparado para:
-
--   índices;
--   chaves primárias;
--   chaves estrangeiras;
--   normalização;
--   transações;
--   locks;
--   isolamento;
--   joins;
--   constraints;
--   cardinalidade;
--   planos de execução;
--   migrations.
-
-------------------------------------------------------------------------
-
-# 16. Integração com APIs
-
-Uma integração normalmente envolve:
-
-1.  construir a requisição;
-2.  autenticar;
-3.  enviar dados;
-4.  interpretar resposta;
-5.  tratar erros;
-6.  lidar com timeout;
-7.  eventualmente implementar retry;
-8.  registrar informações para diagnóstico.
-
-É importante considerar:
-
-``` text
-API disponível
-API indisponível
-timeout
-resposta inválida
-401
-403
-404
-429
-500
+```typescript
+class RelatorioService {
+  constructor(
+    private repository: StudentRepository,
+  ) {}
+}
 ```
 
-------------------------------------------------------------------------
+O serviço possui uma dependência de repositório.
 
-# 17. Livros
+Em vez de criar uma hierarquia:
 
-Essa pergunta procura entender seu hábito de estudo.
+```text
+Classe A
+  ↓
+Classe B
+  ↓
+Classe C
+  ↓
+Classe D
+```
 
-Não invente livros.
+podemos montar comportamentos:
 
-Se não lembrar ou não tiver hábito de leitura técnica, uma resposta
-honesta é melhor:
+```text
+Service
+ ├── Repository
+ ├── Validator
+ └── Notifier
+```
 
-> "Tenho estudado principalmente por documentação oficial, cursos e
-> projetos práticos. Estou estruturando uma rotina de leitura técnica."
+---
 
-O importante é realmente conhecer aquilo que mencionar.
+# 16. Composição x herança
 
-------------------------------------------------------------------------
+Uma regra prática muito conhecida é:
 
-# 18. Nível Pleno
+> Prefira composição à herança quando composição representar melhor o relacionamento.
 
-Agora o entrevistador normalmente espera mais do que uma definição.
+Herança:
 
-Procure explicar:
+```text
+Cachorro IS-A Animal
+```
 
--   por que uma técnica existe;
--   quais problemas resolve;
--   quais trade-offs possui;
--   quando não usar;
--   como aplicaria na prática.
+Composição:
 
-------------------------------------------------------------------------
+```text
+Aula HAS-A Horário
+```
 
-# 19. O que é Injeção de Dependência?
+Ou:
 
-É uma técnica em que um objeto recebe de fora as dependências que
-precisa.
+```text
+UseCase HAS-A Repository
+```
 
-Em vez de:
+Composição geralmente facilita trocar uma dependência sem modificar uma hierarquia inteira.
 
-``` typescript
+Herança não é proibida. Ela deve ser usada quando a relação de especialização realmente fizer sentido.
+
+---
+
+# 17. O que é acoplamento?
+
+**Acoplamento** é o grau de dependência entre partes de um sistema.
+
+Imagine:
+
+```text
+A depende diretamente de B
+```
+
+Se A precisa conhecer muitos detalhes de B, o acoplamento tende a ser maior.
+
+Exemplo:
+
+```typescript
 class StudentService {
-  private repository = new StudentRepository();
+  private repository = new PostgresStudentRepository();
 }
 ```
 
-podemos fazer:
+Agora `StudentService` está diretamente ligado à implementação PostgreSQL.
 
-``` typescript
+Se mudarmos para outro armazenamento, precisamos mexer no serviço.
+
+Podemos reduzir esse acoplamento:
+
+```typescript
+interface StudentRepository {
+  findById(id: string): Promise<Student | null>;
+}
+
 class StudentService {
   constructor(
     private repository: StudentRepository,
@@ -500,684 +588,2574 @@ class StudentService {
 }
 ```
 
-Benefícios:
+Agora o serviço depende do contrato, e não diretamente da implementação.
 
--   menor acoplamento;
--   maior testabilidade;
--   facilidade para substituir implementações;
--   separação de responsabilidades.
+## Baixo acoplamento
 
-Com uma interface:
+Baixo acoplamento significa que módulos possuem menos dependências desnecessárias entre si.
 
-``` typescript
-interface StudentRepository {
-  findById(id: string): Promise<Student | null>;
+Isso tende a facilitar:
+
+- testes;
+- manutenção;
+- evolução;
+- substituição de implementações.
+
+---
+
+# 18. O que é coesão?
+
+**Coesão** mede o quanto as responsabilidades de uma parte do sistema estão relacionadas entre si.
+
+Alta coesão:
+
+```text
+StudentService
+ ├── criar aluno
+ ├── atualizar aluno
+ └── buscar aluno
+```
+
+As responsabilidades estão relacionadas.
+
+Baixa coesão:
+
+```text
+StudentService
+ ├── criar aluno
+ ├── enviar email
+ ├── gerar PDF
+ ├── calcular imposto
+ ├── fazer backup
+ └── processar pagamento
+```
+
+Aqui existem muitas responsabilidades diferentes.
+
+## Relação entre coesão e acoplamento
+
+Uma boa meta é:
+
+```text
+alta coesão
++
+baixo acoplamento
+```
+
+Isso significa que cada módulo possui responsabilidades relacionadas e depende pouco de detalhes externos.
+
+---
+
+# PARTE III — QUALIDADE DE CÓDIGO
+
+# 19. Função pura
+
+Uma função pura possui duas propriedades:
+
+1. Para a mesma entrada, sempre produz a mesma saída.
+2. Não causa efeitos colaterais observáveis.
+
+```typescript
+function somar(a: number, b: number): number {
+  return a + b;
 }
 ```
 
-um teste pode fornecer um repositório fake.
+Não depende de banco, horário atual, arquivo ou variável global.
 
-------------------------------------------------------------------------
+## Efeito colateral
 
-# 20. Design Patterns
-
-Design Patterns são soluções recorrentes para problemas recorrentes de
-design.
+Efeito colateral é uma alteração/ação externa provocada pela execução da função.
 
 Exemplos:
 
--   Factory;
--   Strategy;
--   Adapter;
--   Decorator;
--   Observer;
--   Repository;
--   Builder;
--   Singleton;
--   Command.
+- escrever no banco;
+- escrever arquivo;
+- fazer requisição HTTP;
+- alterar variável global;
+- enviar mensagem;
+- modificar estado compartilhado.
 
-Não basta decorar nomes.
+Nem todo efeito colateral é ruim.
 
-Pergunte:
+O ponto é controlá-lo.
 
-> "Qual problema esse padrão resolve?"
+---
 
-### Strategy
+# 20. DRY
 
-Imagine diferentes formas de calcular desconto:
+DRY significa **Don't Repeat Yourself**.
 
-``` text
-DescontoAluno
-DescontoPromocional
-DescontoProfessor
+A ideia é evitar duplicação de conhecimento ou regra.
+
+Porém:
+
+> DRY não significa transformar qualquer código parecido em uma abstração.
+
+Duas partes podem parecer iguais hoje e possuir motivos diferentes para mudar amanhã.
+
+---
+
+# 21. KISS
+
+KISS significa **Keep It Simple**.
+
+A ideia é preferir soluções simples quando elas resolvem adequadamente o problema.
+
+Exemplo:
+
+Se um `if` resolve uma regra, talvez não seja necessário criar cinco classes e três patterns.
+
+---
+
+# 22. YAGNI
+
+YAGNI significa **You Aren't Gonna Need It**.
+
+A ideia é evitar implementar funcionalidades apenas porque talvez sejam necessárias no futuro.
+
+Exemplo:
+
+Se o Beach Tennis Manager ainda não precisa de suporte a 20 gateways de pagamento, não precisamos criar uma arquitetura gigantesca para eles agora.
+
+Podemos projetar de forma extensível sem implementar complexidade desnecessária.
+
+---
+
+# PARTE IV — SOLID E DEPENDÊNCIAS
+
+# 23. O que é Injeção de Dependência?
+
+Uma dependência é algo que uma classe precisa para executar seu trabalho.
+
+Exemplo:
+
+```text
+StudentService precisa de StudentRepository
 ```
 
-Uma estratégia comum permite trocar a implementação sem alterar o código
-consumidor.
+Injeção de Dependência significa fornecer essa dependência externamente.
 
-Design Pattern não significa automaticamente código melhor. Padrões
-desnecessários aumentam complexidade.
+Evitar:
 
-------------------------------------------------------------------------
+```typescript
+class StudentService {
+  private repository = new PostgresStudentRepository();
+}
+```
 
-# 21. SOLID
+Preferir:
 
-## S --- Single Responsibility Principle
+```typescript
+class StudentService {
+  constructor(
+    private repository: StudentRepository,
+  ) {}
+}
+```
 
-Uma classe/módulo deve ter uma responsabilidade bem definida e um motivo
-principal para mudança.
+Agora quem cria `StudentService` decide qual implementação fornecer.
 
-Não significa que uma classe só pode ter um método.
+---
 
-## O --- Open/Closed Principle
+# 24. Inversão de Dependência x Injeção de Dependência
 
-Software deve estar aberto para extensão, mas fechado para modificação.
+Esses conceitos são relacionados, mas não são a mesma coisa.
 
-## L --- Liskov Substitution Principle
+### Injeção de Dependência
 
-Um subtipo deve poder substituir seu tipo base sem quebrar as
-expectativas do código cliente.
+É uma técnica para fornecer dependências externamente.
 
-## I --- Interface Segregation Principle
+### Dependency Inversion Principle
 
-É melhor ter interfaces menores e específicas do que uma interface
-gigante que obriga implementações a depender de métodos que não usam.
+É um princípio do SOLID que, de forma simplificada, recomenda que módulos de alto nível não dependam diretamente de detalhes concretos.
 
-## D --- Dependency Inversion Principle
+Exemplo:
 
-Módulos de alto nível não devem depender diretamente de detalhes
-concretos. Ambos devem depender de abstrações.
+```text
+Errado conceitualmente:
 
-------------------------------------------------------------------------
+UseCase
+   ↓
+PostgresRepository
+```
 
-# 22. Onde deve ficar a lógica de negócio?
+Podemos ter:
 
-Uma regra importante:
+```text
+UseCase
+   ↓
+StudentRepository (abstração)
+   ↑
+PostgresStudentRepository
+```
 
-> Regras de negócio não devem ficar espalhadas aleatoriamente entre
-> controller, banco, frontend e infraestrutura.
+O caso de uso conhece o contrato.
 
-Um exemplo de organização:
+A implementação concreta conhece o contrato.
 
-``` text
+Isso reduz acoplamento.
+
+---
+
+# 25. SOLID
+
+SOLID é um conjunto de cinco princípios de design de software.
+
+## S — Single Responsibility Principle
+
+Uma unidade de código deve possuir uma responsabilidade bem definida e um motivo principal para mudança.
+
+Não significa:
+
+> "uma classe só pode ter um método."
+
+Significa evitar misturar responsabilidades sem relação.
+
+---
+
+## O — Open/Closed Principle
+
+Entidades de software devem ser abertas para extensão e fechadas para modificação.
+
+A ideia é conseguir adicionar comportamentos sem precisar alterar constantemente código estável.
+
+---
+
+## L — Liskov Substitution Principle
+
+Um subtipo deve poder ser utilizado no lugar do tipo base sem quebrar as expectativas do código.
+
+Um exemplo clássico de problema ocorre quando uma classe filha herda uma operação, mas não consegue respeitar o comportamento esperado pelo tipo pai.
+
+---
+
+## I — Interface Segregation Principle
+
+É preferível ter interfaces pequenas e específicas do que uma interface gigantesca.
+
+Em vez de:
+
+```typescript
+interface UserService {
+  create(): void;
+  update(): void;
+  delete(): void;
+  sendEmail(): void;
+  exportPdf(): void;
+  processPayment(): void;
+}
+```
+
+podemos separar contratos conforme as responsabilidades.
+
+---
+
+## D — Dependency Inversion Principle
+
+Módulos importantes devem depender de abstrações, não diretamente de detalhes concretos.
+
+Esse princípio aparece diretamente no nosso uso de:
+
+```text
+Use Case
+   ↓
+Repository interface
+   ↑
+Drizzle/PostgreSQL
+```
+
+---
+
+# PARTE V — DESIGN PATTERNS
+
+# 26. O que é um Design Pattern?
+
+Design Pattern é uma solução recorrente para um problema recorrente de design de software.
+
+Um pattern não é uma biblioteca nem um código que devemos copiar cegamente.
+
+Antes de usar um pattern, pergunte:
+
+> "Qual problema estou tentando resolver?"
+
+---
+
+# 27. Strategy
+
+Strategy permite encapsular diferentes algoritmos/comportamentos atrás de uma mesma abstração.
+
+Exemplo:
+
+```text
+CalculoPreco
+ ├── PrecoNormal
+ ├── PrecoComDesconto
+ └── PrecoPromocional
+```
+
+O consumidor pode utilizar uma estratégia sem conhecer seus detalhes.
+
+---
+
+# 28. Factory
+
+Factory centraliza a criação de objetos quando criar esses objetos envolve decisões ou detalhes que não queremos espalhar pelo código.
+
+Exemplo conceitual:
+
+```typescript
+const notification = NotificationFactory.create("email");
+```
+
+A chamada não precisa conhecer todos os detalhes da construção.
+
+---
+
+# 29. Adapter
+
+Adapter permite adaptar uma interface para outra.
+
+Imagine que nosso sistema espera:
+
+```typescript
+interface PaymentGateway {
+  charge(amount: number): Promise<void>;
+}
+```
+
+Mas um provedor externo possui:
+
+```typescript
+externalProvider.makePayment(valueInCents: number);
+```
+
+Um Adapter pode traduzir uma interface para a outra.
+
+---
+
+# 30. Decorator
+
+Decorator adiciona comportamento a um objeto sem precisar modificar sua implementação original.
+
+Exemplo:
+
+```text
+Repository
+   ↓
+LoggingRepository
+   ↓
+CacheRepository
+   ↓
+Repository real
+```
+
+O comportamento pode ser "envolvido".
+
+---
+
+# 31. Proxy x Decorator
+
+Os dois podem envolver outro objeto, mas o objetivo pode ser diferente.
+
+### Decorator
+
+Normalmente adiciona comportamento.
+
+Exemplo:
+
+```text
+Repository
+ ↓
+LoggingDecorator
+```
+
+### Proxy
+
+Normalmente controla o acesso ao objeto.
+
+Exemplo:
+
+```text
+Proxy
+ ↓
+verifica autorização
+ ↓
+objeto real
+```
+
+As implementações podem parecer semelhantes, mas a intenção é diferente.
+
+---
+
+# PARTE VI — ARQUITETURA
+
+# 32. O que é arquitetura de software?
+
+Arquitetura é a organização estrutural do sistema e das suas principais decisões técnicas.
+
+Ela envolve:
+
+- componentes;
+- responsabilidades;
+- dependências;
+- comunicação;
+- persistência;
+- segurança;
+- implantação;
+- limites entre módulos.
+
+Arquitetura não é simplesmente criar pastas.
+
+---
+
+# 33. Controller
+
+Controller é a parte que normalmente recebe uma requisição HTTP e coordena a entrada/saída da camada web.
+
+Exemplo:
+
+```text
+POST /students
+       ↓
+Controller
+       ↓
+CreateStudentUseCase
+```
+
+O controller não deveria concentrar toda a regra de negócio.
+
+---
+
+# 34. Use Case
+
+Use Case representa uma ação relevante para o sistema.
+
+Exemplos:
+
+```text
+CreateStudent
+RegisterAbsence
+UseMakeupCredit
+CreatePayment
+CloseCycle
+```
+
+O Use Case coordena o fluxo necessário para realizar aquela ação.
+
+---
+
+# 35. Domínio
+
+Domínio é o conjunto de conceitos e regras relacionados ao problema que estamos resolvendo.
+
+No Beach Tennis Manager:
+
+```text
+Aluno
+Professor
+Turma
+Aula
+Matrícula
+Ciclo
+Pagamento
+Falta
+Reposição
+Crédito de reposição
+```
+
+Esses conceitos fazem parte do domínio.
+
+---
+
+# 36. Infraestrutura
+
+Infraestrutura contém detalhes técnicos externos ao núcleo da regra de negócio.
+
+Exemplos:
+
+```text
+PostgreSQL
+Drizzle
+Fastify
+JWT
+Cookies
+APIs externas
+sistema de arquivos
+serviços de email
+```
+
+A ideia é evitar que a regra de negócio fique dependente desnecessariamente desses detalhes.
+
+---
+
+# 37. Repository
+
+Repository é uma abstração para acesso a dados.
+
+Exemplo:
+
+```typescript
+interface StudentRepository {
+  findById(id: string): Promise<Student | null>;
+  save(student: Student): Promise<void>;
+}
+```
+
+Uma implementação pode utilizar PostgreSQL:
+
+```text
+StudentRepository
+       ↑
+DrizzleStudentRepository
+       ↓
+PostgreSQL
+```
+
+O caso de uso não precisa conhecer SQL diretamente.
+
+---
+
+# 38. Arquitetura em camadas
+
+Uma arquitetura simples pode ser:
+
+```text
 HTTP
  ↓
-Controller / Route
+Controller
  ↓
 Application / Use Case
  ↓
 Domain
  ↓
 Infrastructure
-```
-
-Uma regra como:
-
-> "Um ciclo possui quatro aulas efetivamente utilizadas."
-
-é regra de negócio.
-
-Ela não deveria depender diretamente de Fastify, PostgreSQL, HTTP ou
-React.
-
-------------------------------------------------------------------------
-
-# 23. Padrões de arquitetura
-
-Conheça:
-
--   Layered Architecture;
--   Clean Architecture;
--   Hexagonal Architecture;
--   Ports and Adapters;
--   Modular Monolith;
--   Microservices.
-
-## Layered
-
-Divide o sistema em camadas:
-
-``` text
-Controller
-Service
-Repository
+ ↓
 Database
 ```
 
-## Clean Architecture
+Cada camada possui uma responsabilidade.
 
-Procura manter regras centrais independentes de detalhes externos.
+---
 
-## Hexagonal Architecture
+# 39. Clean Architecture
 
-Também conhecida como Ports and Adapters.
+Clean Architecture é uma abordagem que procura proteger as regras centrais do sistema contra detalhes externos.
 
-``` text
-Domínio / aplicação
-        ↕
-     Ports
-        ↕
-    Adapters
+Uma ideia importante é:
+
+> detalhes dependem das regras centrais, e não o contrário.
+
+Por exemplo:
+
+```text
+PostgreSQL pode mudar
+Fastify pode mudar
+React pode mudar
+provedor de pagamento pode mudar
+
+mas as regras do ciclo de 4 aulas continuam sendo regras do domínio.
 ```
 
-Banco, HTTP e serviços externos são detalhes conectados por adaptadores.
+---
 
-## Modular Monolith
+# 40. Arquitetura Hexagonal
 
-Uma única aplicação implantável, mas organizada internamente em módulos
-bem separados.
+Também conhecida como **Ports and Adapters**.
 
-------------------------------------------------------------------------
+A ideia é separar o núcleo da aplicação das tecnologias externas.
 
-# 24. O que é uma entidade anêmica?
+```text
+             PostgreSQL
+                 ↓
+             Adapter
+                 ↓
+        ┌─────────────────┐
+        │   Aplicação     │
+        │    / Domínio    │
+        └─────────────────┘
+          ↑             ↑
+       Adapter        Adapter
+          ↑             ↑
+        HTTP          API externa
+```
 
-Uma entidade anêmica é um objeto que contém principalmente dados,
-enquanto regras e comportamentos relacionados ficam espalhados em outros
-serviços.
+### Port
+
+Port é uma interface/contrato que representa uma necessidade ou ponto de comunicação.
+
+### Adapter
+
+Adapter implementa essa comunicação.
+
+---
+
+# 41. Monólito
+
+Monólito é uma aplicação implantada como uma unidade principal.
+
+Isso não significa necessariamente código desorganizado.
+
+Podemos ter um:
+
+> **Modular Monolith**
+
+em que a aplicação é uma unidade de deploy, mas internamente possui módulos bem separados.
+
+Para muitos sistemas, isso é mais simples do que começar com microsserviços.
+
+---
+
+# 42. Microsserviços
+
+Microsserviços dividem um sistema em serviços menores, normalmente com responsabilidades e ciclos de implantação independentes.
+
+Possíveis benefícios:
+
+- implantação independente;
+- escalabilidade independente;
+- isolamento de determinadas responsabilidades.
+
+Possíveis custos:
+
+- comunicação de rede;
+- observabilidade mais complexa;
+- deploy mais complexo;
+- consistência distribuída;
+- maior custo operacional.
+
+Não devemos escolher microsserviços apenas porque parecem mais "profissionais".
+
+---
+
+# 43. Entidade anêmica
+
+Uma entidade anêmica é uma entidade que possui principalmente dados, enquanto as regras relacionadas a ela ficam espalhadas em serviços externos.
 
 Exemplo:
 
-``` typescript
-class Student {
+```typescript
+class Cycle {
   id: string;
-  name: string;
-  price: number;
+  classes: number;
 }
 ```
 
-E as regras ficam em vários serviços.
+E toda regra fica em:
 
-O conceito é especialmente discutido em contraste com modelos ricos em
-comportamento e Domain-Driven Design.
+```text
+CycleService
+CycleManager
+CycleHelper
+CycleUtils
+...
+```
 
-Importante:
+Isso pode dificultar a compreensão de onde o comportamento pertence.
 
-> Entidade anêmica não significa automaticamente que o sistema está
-> errado.
+Mas entidades anêmicas não são automaticamente erradas. O modelo adequado depende do domínio e da arquitetura adotada.
 
-Depende do contexto arquitetural.
+---
 
-------------------------------------------------------------------------
+# 44. DDD
 
-# 25. Principais mudanças do HTTP/2
+DDD significa **Domain-Driven Design**.
 
-HTTP/2 trouxe melhorias importantes:
+É uma abordagem que procura modelar software de acordo com o domínio e sua linguagem.
 
--   multiplexação;
--   compressão de headers com HPACK;
--   streams;
--   frames binários;
--   múltiplos streams dentro de uma conexão TCP.
+Termos importantes:
 
-A multiplexação permite transportar múltiplas requisições/respostas
-simultaneamente pela mesma conexão.
+- entidade;
+- value object;
+- agregado;
+- serviço de domínio;
+- linguagem ubíqua;
+- bounded context.
 
-HTTP/2 não significa simplesmente "HTTP mais rápido"; existem vários
-fatores envolvidos no ganho real.
+Não é necessário aplicar todos esses conceitos em qualquer sistema.
 
-------------------------------------------------------------------------
+---
 
-# 26. O que é um Proxy Reverso?
+# PARTE VII — HTTP E APIs
 
-Um reverse proxy fica na frente dos servidores da aplicação:
+# 45. O que é HTTP?
 
-``` text
+HTTP é um protocolo utilizado para comunicação entre sistemas na web.
+
+Uma comunicação básica envolve:
+
+```text
 Cliente
-   ↓
-Reverse Proxy
-   ↓
-API / Aplicação
+  ↓
+Request
+  ↓
+Servidor
+  ↓
+Response
+  ↓
+Cliente
 ```
+
+---
+
+# 46. Request
+
+Uma requisição HTTP possui informações como:
+
+- método;
+- URL;
+- headers;
+- body;
+- parâmetros.
+
+Exemplo:
+
+```http
+POST /students
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "name": "João"
+}
+```
+
+---
+
+# 47. Response
+
+A resposta possui:
+
+- status code;
+- headers;
+- body, quando necessário.
+
+Exemplo:
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "id": "123",
+  "name": "João"
+}
+```
+
+---
+
+# 48. Verbos HTTP
+
+## GET
+
+Consultar.
+
+```http
+GET /students
+```
+
+## POST
+
+Criar ou executar uma operação que não seja uma simples atualização idempotente.
+
+```http
+POST /students
+```
+
+## PUT
+
+Normalmente representa substituição do recurso.
+
+```http
+PUT /students/123
+```
+
+## PATCH
+
+Alteração parcial.
+
+```http
+PATCH /students/123
+```
+
+## DELETE
+
+Remoção.
+
+```http
+DELETE /students/123
+```
+
+---
+
+# 49. Idempotência
+
+Uma operação idempotente pode ser repetida sem produzir um efeito adicional diferente do primeiro resultado final.
+
+Exemplo conceitual:
+
+```text
+PUT /students/123
+nome = João
+```
+
+Executar a mesma operação várias vezes deve resultar no mesmo estado final.
+
+Isso é especialmente importante em integrações e retries.
+
+---
+
+# 50. Status codes
+
+## 2xx — sucesso
+
+### 200 OK
+
+Requisição executada com sucesso.
+
+### 201 Created
+
+Recurso criado.
+
+### 204 No Content
+
+Sucesso sem conteúdo no corpo.
+
+---
+
+## 3xx — redirecionamento/cache
+
+### 301
+
+Recurso movido permanentemente.
+
+### 304
+
+Recurso não foi alterado em relação à versão que o cliente já possui.
+
+---
+
+## 4xx — problema na requisição/contexto do cliente
+
+### 400
+
+Requisição inválida.
+
+### 401
+
+Autenticação ausente ou inválida.
+
+### 403
+
+Identidade conhecida, mas sem autorização para aquela operação.
+
+### 404
+
+Recurso não encontrado.
+
+### 409
+
+Conflito com o estado atual.
+
+No Beach Tennis Manager, um conflito pode ser apropriado em situações como tentativa de reutilizar um refresh token já rotacionado.
+
+---
+
+## 5xx — problema no servidor
+
+### 500
+
+Erro interno.
+
+### 502
+
+Servidor intermediário recebeu resposta inválida de outro servidor.
+
+### 503
+
+Serviço indisponível.
+
+---
+
+# 51. API
+
+API significa **Application Programming Interface**.
+
+É um contrato que permite que um sistema utilize funcionalidades ou dados de outro sistema.
+
+Exemplo:
+
+```text
+Frontend React
+     ↓ HTTP
+Backend Fastify
+     ↓
+PostgreSQL
+```
+
+O frontend utiliza a API do backend.
+
+---
+
+# 52. REST
+
+REST é um estilo arquitetural para sistemas distribuídos.
+
+Uma API RESTful costuma trabalhar com recursos.
+
+Exemplo:
+
+```text
+GET    /students
+POST   /students
+GET    /students/123
+PATCH  /students/123
+DELETE /students/123
+```
+
+REST não significa simplesmente "usar JSON".
+
+---
+
+# PARTE VIII — AUTENTICAÇÃO E SEGURANÇA
+
+# 53. Autenticação x autorização
+
+### Autenticação
+
+Responde:
+
+> "Quem é você?"
+
+Exemplo:
+
+```text
+email + senha
+```
+
+### Autorização
+
+Responde:
+
+> "O que você pode fazer?"
+
+Exemplo:
+
+```text
+ADMIN pode consultar todos os professores.
+PROFESSOR só pode acessar seus próprios dados.
+```
+
+---
+
+# 54. Cookie
+
+Cookie é um pequeno dado armazenado pelo navegador e enviado conforme as regras do domínio/caminho.
+
+No nosso projeto utilizamos cookies HttpOnly para tokens.
+
+---
+
+# 55. HttpOnly
+
+Um cookie `HttpOnly` não fica disponível diretamente para JavaScript através de `document.cookie`.
+
+Isso reduz a exposição de tokens a determinados ataques de XSS.
+
+Não significa que cookies sejam automaticamente seguros. Ainda precisamos considerar:
+
+- HTTPS;
+- SameSite;
+- CSRF;
+- configuração correta de domínio/path;
+- expiração.
+
+---
+
+# 56. JWT
+
+JWT significa **JSON Web Token**.
+
+É um formato de token assinado que pode carregar claims.
+
+No projeto:
+
+```text
+Access Token
+  ↓
+JWT
+```
+
+Claims importantes incluem:
+
+```text
+sub
+email
+role
+iat
+exp
+```
+
+### O que é claim?
+
+Claim é uma informação declarada dentro do token.
+
+### Assinatura
+
+A assinatura permite verificar se o token foi alterado e se foi produzido por quem possui o segredo/chave correspondente.
+
+---
+
+# 57. Access Token x Refresh Token
+
+Access Token:
+
+- vida curta;
+- usado para autenticar requisições;
+- no projeto possui TTL de 10 minutos.
+
+Refresh Token:
+
+- vida maior;
+- utilizado para obter novo Access Token;
+- no projeto possui TTL de 8 horas;
+- é armazenado no banco através de hash;
+- possui rotação.
+
+Fluxo:
+
+```text
+Login
+ ↓
+Access Token + Refresh Token
+ ↓
+Access expira
+ ↓
+Refresh Token
+ ↓
+novo Access Token + novo Refresh Token
+```
+
+---
+
+# 58. Rotação de Refresh Token
+
+Na rotação:
+
+```text
+Refresh A
+   ↓
+usado
+   ↓
+Refresh B
+```
+
+O token A deixa de ser válido.
+
+Se alguém tentar reutilizar A, o servidor consegue identificar o uso indevido/reuso.
+
+Isso é uma camada importante de segurança.
+
+---
+
+# PARTE IX — BANCO DE DADOS
+
+# 59. Banco relacional
+
+Um banco relacional organiza dados em tabelas relacionadas.
+
+PostgreSQL, MySQL e SQL Server são bancos relacionais.
+
+Exemplo:
+
+```text
+students
+teachers
+classes
+enrollments
+payments
+cycles
+```
+
+---
+
+# 60. Chave primária
+
+Primary Key identifica unicamente uma linha.
+
+Exemplo:
+
+```text
+students.id
+```
+
+No projeto utilizamos UUID como identificador técnico dos alunos.
+
+---
+
+# 61. Chave estrangeira
+
+Foreign Key cria uma relação entre tabelas.
+
+Exemplo:
+
+```text
+enrollments.student_id
+        ↓
+students.id
+```
+
+Isso ajuda o banco a preservar integridade referencial.
+
+---
+
+# 62. Constraint
+
+Constraint é uma regra que o banco utiliza para impedir estados inválidos.
 
 Exemplos:
 
--   Nginx;
--   HAProxy;
--   Traefik.
-
-Pode ser usado para:
-
--   TLS/HTTPS;
--   roteamento;
--   balanceamento;
--   cache;
--   compressão;
--   controle de acesso;
--   esconder infraestrutura interna.
-
-Um proxy tradicional representa o cliente; um reverse proxy representa o
-servidor.
-
-------------------------------------------------------------------------
-
-# 27. Sistemas de fila
-
-Filas permitem processamento assíncrono.
-
-``` text
-HTTP Request
-   ↓
-Enfileira tarefa
-   ↓
-Resposta rápida
-
-Fila
-   ↓
-Worker
-   ↓
-Processamento
+```text
+PRIMARY KEY
+FOREIGN KEY
+UNIQUE
+NOT NULL
+CHECK
 ```
 
-Tecnologias:
+Exemplo:
 
--   RabbitMQ;
--   Kafka;
--   Amazon SQS;
--   Redis Streams;
--   BullMQ.
-
-Usos:
-
--   emails;
--   processamento de arquivos;
--   notificações;
--   tarefas demoradas;
--   integrações externas.
-
-Conceitos:
-
--   producer;
--   consumer;
--   worker;
--   retry;
--   dead-letter queue;
--   idempotência;
--   ordering;
--   acknowledgment.
-
-------------------------------------------------------------------------
-
-# 28. Proxy x Decorator
-
-Os dois podem envolver um objeto e interceptar chamadas.
-
-## Proxy
-
-Controla ou intermedeia o acesso a um objeto.
-
-Pode adicionar:
-
--   autorização;
--   lazy loading;
--   cache;
--   controle de acesso.
-
-## Decorator
-
-Adiciona comportamento a um objeto sem alterar diretamente sua
-implementação original.
-
-``` text
-Repository
-    ↓
-CacheDecorator
-    ↓
-LoggingDecorator
+```sql
+cpf TEXT UNIQUE NOT NULL
 ```
 
-Diferença simplificada:
+Isso ajuda a garantir que dois alunos não tenham o mesmo CPF.
 
-**Proxy:** foco em controlar/intermediar acesso.
+---
 
-**Decorator:** foco em adicionar comportamento.
+# 63. Índice
 
-As fronteiras podem se sobrepor na prática.
+Índice é uma estrutura utilizada pelo banco para encontrar dados com mais eficiência em determinadas consultas.
 
-------------------------------------------------------------------------
+Imagine um livro.
 
-# 29. Arquitetura de microsserviços
+Sem índice:
 
-Microsserviços dividem o sistema em serviços menores e relativamente
-independentes.
-
-``` text
-                    ┌── Student Service
-Cliente → Gateway ──┼── Payment Service
-                    ├── Class Service
-                    └── Notification Service
+```text
+procura página por página
 ```
 
-Comunicação pode ocorrer via:
+Com índice:
 
--   HTTP;
--   gRPC;
--   mensagens;
--   eventos.
-
-### Benefícios
-
--   deploy independente;
--   escalabilidade independente;
--   isolamento de domínios;
--   equipes independentes.
-
-### Custos
-
--   maior complexidade operacional;
--   observabilidade distribuída;
--   comunicação de rede;
--   consistência distribuída;
--   deploy mais complexo;
--   debugging mais difícil;
--   necessidade de lidar com falhas entre serviços.
-
-Microsserviços não são automaticamente melhores. Para sistemas menores,
-um monólito modular pode ser mais adequado.
-
-------------------------------------------------------------------------
-
-# 30. SQL x NoSQL
-
-## SQL
-
-Bancos relacionais trabalham com:
-
--   tabelas;
--   linhas;
--   colunas;
--   relacionamentos;
--   constraints;
--   SQL;
--   transações.
-
-Exemplos:
-
--   PostgreSQL;
--   MySQL;
--   SQL Server;
--   Oracle.
-
-## NoSQL
-
-"NoSQL" reúne diferentes modelos não relacionais:
-
--   documentos;
--   chave-valor;
--   grafos;
--   wide-column.
-
-Exemplos:
-
--   MongoDB;
--   Redis;
--   Cassandra;
--   Neo4j.
-
-Não pense em "SQL para pequeno e NoSQL para grande".
-
-A escolha depende dos requisitos.
-
-Para o Beach Tennis Manager, PostgreSQL faz sentido porque existem
-muitos relacionamentos e regras envolvendo:
-
-``` text
-Professor
-Aluno
-Turma
-Matrícula
-Aula
-Ciclo
-Pagamento
-Reposição
+```text
+vai diretamente para a região relevante
 ```
 
-------------------------------------------------------------------------
+Índices podem melhorar consultas, mas possuem custo:
 
-# 31. Alta coesão e baixo acoplamento
+- ocupam espaço;
+- precisam ser atualizados;
+- podem aumentar custo de escrita.
 
-## Alta coesão
+Portanto, não devemos criar índices indiscriminadamente.
 
-Uma unidade de código possui responsabilidades fortemente relacionadas.
+---
 
-``` text
-PaymentService
- ├── createPayment
- ├── confirmPayment
- └── cancelPayment
+# 64. JOIN
+
+JOIN combina dados relacionados de tabelas.
+
+Exemplo:
+
+```sql
+SELECT
+  students.name,
+  enrollments.id
+FROM students
+JOIN enrollments
+  ON enrollments.student_id = students.id;
 ```
 
-Essas responsabilidades pertencem ao mesmo domínio.
+Isso permite consultar informações relacionadas sem duplicar todos os dados em uma única tabela.
 
-## Baixo acoplamento
+---
 
-Um módulo depende pouco dos detalhes internos de outros módulos.
+# 65. Normalização
 
-Por exemplo, depender diretamente de `PostgresStudentRepository` cria
-mais acoplamento à infraestrutura do que depender de uma abstração
-`StudentRepository`.
+Normalização é uma forma de organizar dados para reduzir duplicação e inconsistências.
 
-### Objetivo
+Em vez de repetir:
 
-``` text
-Alta coesão
+```text
+Professor = João
+Telefone = ...
+```
+
+em milhares de linhas, mantemos o professor em sua própria tabela e referenciamos seu ID.
+
+Normalização excessiva também pode tornar consultas mais complexas. Novamente existe trade-off.
+
+---
+
+# 66. Transação
+
+Transação é um conjunto de operações tratadas como uma unidade lógica.
+
+Exemplo:
+
+```text
+criar pagamento
 +
-Baixo acoplamento
+atualizar ciclo
++
+registrar movimentação
 ```
 
-Isso tende a produzir sistemas mais fáceis de testar, modificar,
-entender e evoluir.
+Se uma etapa falhar, talvez seja necessário desfazer as anteriores.
 
-------------------------------------------------------------------------
+A transação permite buscar esse comportamento.
 
-# 32. Ligando a teoria ao Beach Tennis Manager
+---
 
-  Conceito                 Aplicação possível
-  ------------------------ --------------------------------------
-  OOP                      Entidades e serviços
-  Encapsulamento           Regras protegidas dentro do domínio
-  Abstração                Interfaces/ports
-  Polimorfismo             Diferentes implementações
-  Composição               Composição de serviços e componentes
-  Funções puras            Cálculos determinísticos
-  HTTP                     API REST
-  Status codes             Contratos da API
-  Banco SQL                PostgreSQL
-  Injeção de dependência   Serviços e repositórios
-  SOLID                    Organização dos módulos
-  Repository               Acesso ao banco
-  Arquitetura em camadas   Separação de responsabilidades
-  Baixo acoplamento        Ports/adapters e interfaces
-  Alta coesão              Módulos focados
-  Docker                   Infraestrutura local
-  Git                      Controle de versão
-  Testes                   Validação das regras
+# 67. ACID
 
-------------------------------------------------------------------------
+ACID descreve propriedades importantes de transações.
 
-# 33. Perguntas para praticar
+### Atomicidade
+
+Tudo ou nada.
+
+### Consistência
+
+A transação deve preservar as regras de integridade.
+
+### Isolamento
+
+Operações concorrentes não devem produzir estados incorretos por interferência inadequada.
+
+### Durabilidade
+
+Depois de confirmada, a alteração deve persistir conforme as garantias do banco.
+
+---
+
+# 68. Concorrência
+
+Concorrência acontece quando múltiplas operações ocorrem sobre dados relacionados ao mesmo tempo.
+
+Exemplo:
+
+```text
+Professor A tenta ocupar a última vaga
+Professor B tenta ocupar a mesma vaga
+```
+
+Se o sistema não tratar isso corretamente, podemos acabar com mais alunos do que o limite permitido.
+
+---
+
+# 69. Lock
+
+Lock é um mecanismo de controle de acesso concorrente.
+
+Ele pode impedir que operações incompatíveis alterem determinados dados simultaneamente.
+
+O tipo e o nível de lock devem ser escolhidos de acordo com o problema.
+
+---
+
+# 70. Isolation Level
+
+Isolation Level define como transações concorrentes podem enxergar alterações umas das outras.
+
+Níveis conhecidos incluem:
+
+```text
+Read Uncommitted
+Read Committed
+Repeatable Read
+Serializable
+```
+
+Quanto mais forte o isolamento, dependendo do banco e da operação, maior pode ser o custo de concorrência.
+
+---
+
+# 71. Migration
+
+Migration é uma alteração versionada na estrutura do banco.
+
+Exemplo:
+
+```text
+0000_initial_schema.sql
+0001_replace_sessions_with_refresh_tokens.sql
+```
+
+Isso permite que o schema evolua de maneira reproduzível.
+
+---
+
+# 72. ORM
+
+ORM significa **Object-Relational Mapping**.
+
+Ele cria uma camada de abstração para trabalhar com dados relacionais através de código.
+
+No projeto utilizamos:
+
+```text
+Drizzle ORM
+```
+
+ORM não elimina a necessidade de conhecer SQL.
+
+Um desenvolvedor precisa entender o que a consulta realmente está fazendo no banco.
+
+---
+
+# 73. SQL x NoSQL
+
+SQL/relacional costuma ser adequado quando:
+
+- relações são importantes;
+- consistência é importante;
+- transações são relevantes;
+- estrutura dos dados é bem definida.
+
+NoSQL engloba várias categorias de bancos não relacionais.
+
+Exemplos de modelos:
+
+```text
+documentos
+chave-valor
+colunar
+grafos
+```
+
+Não existe uma regra universal de que NoSQL é mais rápido ou SQL é sempre melhor.
+
+A escolha depende do problema.
+
+---
+
+# PARTE X — DEVOPS E INFRAESTRUTURA
+
+# 74. O que é DevOps?
+
+DevOps é um conjunto de práticas e cultura que aproxima desenvolvimento e operações, buscando entregar software de forma confiável e repetível.
+
+Não significa simplesmente:
+
+> "usar Docker."
+
+Envolve temas como:
+
+- automação;
+- CI/CD;
+- infraestrutura;
+- deploy;
+- observabilidade;
+- segurança;
+- ambientes;
+- colaboração.
+
+---
+
+# 75. Linux
+
+Linux é um sistema operacional amplamente utilizado em servidores.
+
+Conceitos básicos importantes:
+
+```text
+filesystem
+processos
+permissões
+usuários
+serviços
+rede
+logs
+shell
+```
+
+---
+
+# 76. Docker
+
+Docker permite empacotar aplicações e suas dependências em containers.
+
+Um container é um ambiente isolado para executar um processo e seus recursos necessários.
+
+No projeto:
+
+```text
+PostgreSQL
+   ↓
+Docker container
+```
+
+Enquanto:
+
+```text
+API
+Web
+```
+
+podem executar diretamente na máquina durante o desenvolvimento.
+
+---
+
+# 77. Docker Compose
+
+Docker Compose permite definir múltiplos serviços e sua configuração em um arquivo.
+
+Exemplo conceitual:
+
+```text
+compose.yaml
+
+postgres
+redis
+...
+```
+
+Ele facilita subir o ambiente local de desenvolvimento.
+
+---
+
+# 78. Variáveis de ambiente
+
+Configurações que variam por ambiente não devem ser necessariamente colocadas diretamente no código.
+
+Exemplo:
+
+```text
+DATABASE_URL
+JWT_SECRET
+```
+
+Podemos ter:
+
+```text
+desenvolvimento
+teste
+produção
+```
+
+com configurações diferentes.
+
+Segredos não devem ser versionados no Git.
+
+---
+
+# 79. CI/CD
+
+CI = **Continuous Integration**.
+
+Ajuda a validar alterações automaticamente.
+
+Exemplo:
+
+```text
+push
+ ↓
+lint
+ ↓
+typecheck
+ ↓
+tests
+ ↓
+build
+```
+
+CD = **Continuous Delivery/Deployment**, dependendo do contexto.
+
+Pode automatizar entrega/deploy.
+
+---
+
+# 80. Reverse Proxy
+
+Reverse proxy é um servidor intermediário que recebe requisições e encaminha para serviços internos.
+
+Exemplo:
+
+```text
+Internet
+   ↓
+Nginx / Proxy
+   ↓
+API
+```
+
+Pode ajudar com:
+
+- HTTPS;
+- roteamento;
+- headers;
+- compressão;
+- balanceamento;
+- segurança.
+
+---
+
+# 81. DNS
+
+DNS traduz nomes de domínio para endereços utilizados na rede.
+
+Exemplo:
+
+```text
+api.meusistema.com
+        ↓
+servidor
+```
+
+Não é o mesmo que hospedagem. DNS é o mecanismo de resolução de nomes.
+
+---
+
+# 82. HTTPS
+
+HTTPS é HTTP protegido por TLS.
+
+Ele ajuda a proteger a comunicação contra leitura/modificação indevida durante o transporte.
+
+Em produção, autenticação e cookies devem ser configurados considerando HTTPS.
+
+---
+
+# PARTE XI — FILAS
+
+# 83. O que é uma fila?
+
+Uma fila permite colocar uma tarefa para ser processada posteriormente.
+
+Exemplo:
+
+```text
+API
+ ↓
+fila
+ ↓
+worker
+ ↓
+envia WhatsApp
+```
+
+Isso evita que uma requisição precise esperar toda a operação externa terminar.
+
+---
+
+# 84. Producer, Consumer e Worker
+
+### Producer
+
+Produz/publica uma tarefa.
+
+### Consumer
+
+Recebe/processa a tarefa.
+
+### Worker
+
+Processo que executa o trabalho.
+
+Exemplo:
+
+```text
+Backend = producer
+Fila = armazenamento
+Worker = consumer
+```
+
+---
+
+# 85. Retry
+
+Retry é tentar novamente uma operação que falhou.
+
+Não devemos repetir tudo indiscriminadamente.
+
+Precisamos considerar:
+
+- tipo de erro;
+- quantidade de tentativas;
+- intervalo;
+- idempotência.
+
+---
+
+# 86. Dead Letter Queue
+
+DLQ é uma fila para mensagens que não conseguiram ser processadas após determinadas tentativas.
+
+Isso permite investigação posterior sem perder completamente a tarefa.
+
+---
+
+# PARTE XII — HTTP/2
+
+# 87. O que é HTTP/2?
+
+HTTP/2 é uma versão do protocolo HTTP com mecanismos para melhorar a eficiência da comunicação.
+
+Entre seus conceitos estão:
+
+- streams;
+- frames;
+- multiplexação;
+- compressão de headers.
+
+---
+
+# 88. Multiplexação
+
+Em HTTP/1.1, múltiplas requisições podiam exigir mecanismos diferentes de conexão/reutilização.
+
+HTTP/2 permite transportar múltiplos streams simultaneamente dentro de uma conexão.
+
+Conceitualmente:
+
+```text
+uma conexão
+ ├── stream A
+ ├── stream B
+ ├── stream C
+ └── stream D
+```
+
+Isso reduz determinados custos de comunicação.
+
+---
+
+# 89. Frames
+
+HTTP/2 divide mensagens em unidades chamadas frames.
+
+Frames pertencem a streams.
+
+Não é necessário decorar todos os tipos para uma entrevista inicial, mas é importante entender a ideia:
+
+```text
+conexão
+  ↓
+streams
+  ↓
+frames
+```
+
+---
+
+# 90. HPACK
+
+HPACK é um mecanismo utilizado pelo HTTP/2 para compressão de headers.
+
+A ideia é reduzir dados repetidos entre requisições.
+
+---
+
+# PARTE XIII — TESTES
+
+# 91. Por que testar?
+
+Testes automatizados verificam se o comportamento do sistema continua correto.
+
+Eles também ajudam a detectar regressões.
+
+### Regressão
+
+Regressão é quando uma alteração nova quebra um comportamento que anteriormente funcionava.
+
+---
+
+# 92. Teste unitário
+
+Testa uma unidade pequena e isolada de comportamento.
+
+Exemplo:
+
+```text
+calcular valor do desconto
+```
+
+Pode ser executado sem banco ou rede.
+
+---
+
+# 93. Teste de integração
+
+Testa a interação entre componentes reais.
+
+Exemplo:
+
+```text
+Use Case
+ ↓
+Repository
+ ↓
+PostgreSQL
+```
+
+---
+
+# 94. Teste E2E
+
+E2E significa **End-to-End**.
+
+Testa um fluxo mais próximo do uso real.
+
+Exemplo:
+
+```text
+login
+ ↓
+criar aluno
+ ↓
+consultar aluno
+ ↓
+logout
+```
+
+---
+
+# PARTE XIV — GIT
+
+# 95. O que é Git?
+
+Git é um sistema distribuído de controle de versão.
+
+Ele registra alterações no código ao longo do tempo.
+
+---
+
+# 96. Git x GitHub
+
+### Git
+
+Ferramenta de controle de versão.
+
+### GitHub
+
+Plataforma que hospeda repositórios Git e fornece recursos como:
+
+- Pull Requests;
+- Issues;
+- Actions;
+- revisão de código;
+- colaboração.
+
+---
+
+# 97. Commit
+
+Commit registra um conjunto de alterações.
+
+Exemplo:
+
+```bash
+git add .
+git commit -m "feat: adiciona cadastro de alunos"
+```
+
+Um bom commit deve representar uma mudança coerente.
+
+---
+
+# 98. Branch
+
+Branch é uma linha de desenvolvimento.
+
+Exemplo:
+
+```text
+main
+  ↓
+feature/cadastro-alunos
+```
+
+Podemos desenvolver uma funcionalidade sem alterar diretamente a `main`.
+
+---
+
+# 99. Pull Request
+
+Pull Request é uma proposta para integrar alterações de uma branch em outra.
+
+Fluxo:
+
+```text
+feature
+   ↓
+push
+   ↓
+Pull Request
+   ↓
+review
+   ↓
+merge
+```
+
+---
+
+# 100. Merge
+
+Merge integra alterações de uma branch em outra.
+
+---
+
+# 101. Rebase
+
+Rebase reaplica commits de uma branch sobre outra base.
+
+É útil para reorganizar histórico em determinados fluxos, mas exige cuidado porque pode reescrever histórico.
+
+---
+
+# 102. Revert
+
+Revert cria um novo commit que desfaz os efeitos de outro commit.
+
+É diferente de apagar o commit do histórico.
+
+---
+
+# PARTE XV — INTEGRAÇÕES
+
+# 103. Integração com API externa
+
+Uma integração precisa considerar que o sistema externo pode falhar.
+
+Não basta:
+
+```text
+POST
+ ↓
+esperar
+```
+
+Precisamos considerar:
+
+```text
+sucesso
+timeout
+401
+403
+404
+409
+429
+500
+502
+503
+resposta inválida
+```
+
+---
+
+# 104. Timeout
+
+Timeout define quanto tempo esperamos por uma resposta antes de considerar que a operação demorou demais.
+
+Sem timeout, uma aplicação pode ficar esperando indefinidamente em determinadas situações.
+
+---
+
+# 105. Retry em integrações
+
+Retry pode ser útil para erros temporários.
+
+Exemplo:
+
+```text
+tentativa 1 → timeout
+tentativa 2 → timeout
+tentativa 3 → sucesso
+```
+
+Mas devemos tomar cuidado com operações que podem gerar duplicidade.
+
+Por isso idempotência é importante.
+
+---
+
+# 106. Rate limit
+
+Rate limit é uma limitação de quantidade de requisições permitidas em determinado intervalo.
+
+Exemplo:
+
+```text
+100 requisições/minuto
+```
+
+Se ultrapassarmos, um serviço pode responder:
+
+```text
+429 Too Many Requests
+```
+
+---
+
+# PARTE XVI — SEGURANÇA
+
+# 107. Princípio do menor privilégio
+
+Cada usuário, serviço ou componente deve possuir somente as permissões necessárias para realizar sua função.
+
+No Beach Tennis Manager:
+
+```text
+ADMIN
+  ↓
+visibilidade global
+
+PROFESSOR
+  ↓
+somente seus dados
+```
+
+Essa regra precisa ser aplicada no backend.
+
+Não podemos confiar apenas no frontend.
+
+---
+
+# 108. Validação de entrada
+
+Dados recebidos do usuário devem ser considerados não confiáveis.
+
+Exemplo:
+
+```text
+POST /students
+```
+
+Precisamos validar:
+
+```text
+nome
+CPF
+email
+telefone
+```
+
+Validação evita estados inválidos e reduz determinados riscos.
+
+---
+
+# 109. SQL Injection
+
+SQL Injection ocorre quando entrada não confiável é incorporada de maneira insegura a comandos SQL.
+
+A solução inclui:
+
+- queries parametrizadas;
+- ORM/query builders corretamente utilizados;
+- validação;
+- não concatenar SQL com entrada arbitrária.
+
+---
+
+# PARTE XVII — APLICAÇÃO NO BEACH TENNIS MANAGER
+
+# 110. Transformando teoria em projeto
+
+Nosso projeto é útil para aprender porque possui problemas reais.
+
+Exemplo:
+
+> "Aluno faltou."
+
+Isso parece simples, mas precisamos perguntar:
+
+```text
+Foi com aviso?
+Quanto tempo antes?
+É uma falta válida?
+Existe crédito?
+O professor atingiu o limite?
+A aula era reposição?
+O ciclo está aberto?
+```
+
+Isso é domínio.
+
+---
+
+# 111. Exemplo: ciclo de 4 aulas
+
+Regra:
+
+> O ciclo inicia quando ocorre a primeira aula efetivamente realizada ou utilizada como parte daquele ciclo.
+
+O pagamento pode acontecer antes.
+
+Quando o ciclo começa, as configurações operacionais aplicáveis são determinadas e congeladas para aquele ciclo.
+
+Uma alteração posterior na configuração não deve modificar retroativamente um ciclo já iniciado.
+
+Feriado não inicia ciclo e não consome uma das quatro aulas.
+
+---
+
+# 112. Exemplo: reposição
+
+Fluxo conceitual:
+
+```text
+Aluno falta
+   ↓
+verifica antecedência
+   ↓
+falta válida?
+   ↓
+verifica limite de reposições
+   ↓
+gera crédito
+```
+
+Depois:
+
+```text
+Crédito disponível
+   ↓
+aparece vaga compatível
+   ↓
+aluno utiliza crédito
+   ↓
+crédito consumido
+```
+
+O crédito pertence à matrícula que o originou.
+
+---
+
+# 113. Exemplo: acoplamento no projeto
+
+Imagine:
+
+```typescript
+class RegisterAbsence {
+  const database = new PostgresDatabase();
+  const whatsapp = new WhatsAppClient();
+}
+```
+
+O caso de uso conhece detalhes de infraestrutura.
+
+Isso aumenta acoplamento.
+
+Podemos trabalhar com contratos:
+
+```text
+RegisterAbsence
+ ├── AbsenceRepository
+ ├── MakeupCreditRepository
+ └── NotificationService
+```
+
+As implementações concretas ficam na infraestrutura.
+
+---
+
+# 114. Exemplo: arquitetura do projeto
+
+Uma visão simplificada:
+
+```text
+apps/api
+│
+├── modules
+│   ├── auth
+│   ├── students
+│   ├── teachers
+│   ├── classes
+│   ├── enrollments
+│   ├── cycles
+│   ├── payments
+│   └── makeups
+│
+└── infrastructure
+    ├── auth
+    ├── database
+    └── http
+```
+
+A ideia é manter:
+
+```text
+regra de negócio
+        ↓
+independente
+        ↓
+detalhes técnicos
+```
+
+na medida adequada à complexidade do projeto.
+
+---
+
+# PARTE XVIII — PERGUNTAS DE ENTREVISTA JUNIOR
+
+## 115. O que é classe?
+
+Resposta:
+
+> "Classe é uma estrutura que define dados e comportamentos que objetos daquele tipo podem possuir."
+
+---
+
+## 116. O que é objeto?
+
+> "Objeto é uma instância concreta de uma classe."
+
+---
+
+## 117. Quais conceitos de OOP você conhece?
+
+Explique:
+
+```text
+encapsulamento
+abstração
+herança
+polimorfismo
+```
+
+Não apenas cite.
+
+---
+
+## 118. Composição x herança?
+
+> "Herança representa uma relação de especialização. Composição monta objetos utilizando outros objetos. Costumo preferir composição quando ela reduz acoplamento e torna as dependências mais flexíveis."
+
+---
+
+## 119. O que é função pura?
+
+> "É uma função que, para a mesma entrada, sempre produz a mesma saída e não possui efeitos colaterais observáveis."
+
+---
+
+## 120. GET x POST?
+
+> "GET é normalmente utilizado para consulta. POST é utilizado para criação ou processamento de operações que não possuem a semântica de uma atualização idempotente."
+
+---
+
+## 121. 401 x 403?
+
+> "401 está relacionado à autenticação. 403 indica que a identidade foi reconhecida, mas não possui autorização para aquela operação."
+
+---
+
+# PARTE XIX — PERGUNTAS DE ENTREVISTA PLENO
+
+# 122. O que é injeção de dependência?
+
+Explique:
+
+```text
+dependência
+↓
+injeção externa
+↓
+menor acoplamento
+↓
+testabilidade
+```
+
+---
+
+# 123. O que é SOLID?
+
+Não apenas fale os nomes.
+
+Escolha um princípio e explique um exemplo.
+
+Principalmente esteja preparado para explicar:
+
+```text
+D = Dependency Inversion Principle
+```
+
+e a diferença entre:
+
+```text
+DIP
+x
+Dependency Injection
+```
+
+---
+
+# 124. Onde deve ficar a regra de negócio?
+
+Resposta conceitual:
+
+> "A regra de negócio deve ficar em uma camada responsável pelo domínio/aplicação, e não ser espalhada aleatoriamente entre controller, frontend, banco e infraestrutura."
+
+---
+
+# 125. O que é baixo acoplamento?
+
+> "É quando componentes possuem poucas dependências desnecessárias entre si. Isso facilita substituir implementações, testar e evoluir o sistema."
+
+---
+
+# 126. O que é alta coesão?
+
+> "É quando as responsabilidades dentro de um módulo estão fortemente relacionadas."
+
+---
+
+# 127. O que é Repository?
+
+> "É uma abstração para acesso a dados, permitindo que a aplicação trabalhe com uma interface sem precisar conhecer os detalhes de persistência."
+
+---
+
+# 128. Monólito x microsserviços?
+
+Não responda:
+
+> "Microsserviços são melhores."
+
+Explique os trade-offs.
+
+```text
+Monólito
++ simplicidade operacional
++ deploy simples
++ desenvolvimento inicial mais simples
+
+Microsserviços
++ independência entre serviços
++ escalabilidade independente
+
+Microsserviços
+- rede
+- observabilidade
+- deploy
+- consistência distribuída
+- complexidade operacional
+```
+
+---
+
+# PARTE XX — COMO RESPONDER UMA ENTREVISTA
+
+Quando perguntarem:
+
+> "O que é X?"
+
+Use:
+
+### 1. Definição
+
+"O conceito X é..."
+
+### 2. Problema
+
+"Ele existe para resolver..."
+
+### 3. Exemplo
+
+"Por exemplo..."
+
+### 4. Trade-off
+
+"Uma desvantagem/limitação é..."
+
+### 5. Projeto
+
+"No Beach Tennis Manager eu aplicaria isso em..."
+
+Isso demonstra compreensão, não apenas memorização.
+
+---
+
+# PARTE XXI — PLANO DE ESTUDO
+
+Sugestão de sequência:
+
+## Semana 1 — Fundamentos
+
+```text
+variáveis
+tipos
+funções
+objetos
+classes
+```
+
+## Semana 2 — OOP
+
+```text
+encapsulamento
+abstração
+herança
+polimorfismo
+interfaces
+composição
+acoplamento
+coesão
+```
+
+## Semana 3 — Código limpo
+
+```text
+funções puras
+efeitos colaterais
+DRY
+KISS
+YAGNI
+SOLID
+```
+
+## Semana 4 — Arquitetura
+
+```text
+Controller
+Use Case
+Domain
+Repository
+Infrastructure
+Clean Architecture
+Hexagonal
+monólito
+microsserviços
+```
+
+## Semana 5 — HTTP/API
+
+```text
+request
+response
+headers
+body
+GET
+POST
+PUT
+PATCH
+DELETE
+status codes
+REST
+autenticação
+autorização
+JWT
+cookies
+```
+
+## Semana 6 — Banco
+
+```text
+SQL
+PK
+FK
+constraints
+índices
+JOIN
+transações
+ACID
+locks
+isolamento
+migrations
+ORM
+```
+
+## Semana 7 — Infraestrutura
+
+```text
+Linux
+Docker
+Compose
+CI/CD
+DNS
+HTTPS
+reverse proxy
+filas
+```
+
+## Semana 8 — Entrevista
+
+```text
+perguntas Junior
+perguntas Pleno
+problemas de arquitetura
+trade-offs
+simulação
+teste técnico
+```
+
+---
+
+# CHECKLIST FINAL
+
+Antes de uma entrevista, você deve conseguir explicar sem consultar material:
 
 ## Junior
 
-1.  O que é uma classe?
-2.  O que é um objeto?
-3.  Qual a diferença entre classe e objeto?
-4.  O que é encapsulamento?
-5.  O que é abstração?
-6.  O que é herança?
-7.  O que é polimorfismo?
-8.  Qual a diferença entre classe abstrata e interface?
-9.  O que é uma função pura?
-10. O que significa composição sobre herança?
-11. Quais métodos HTTP você conhece?
-12. Qual a diferença entre PUT e PATCH?
-13. O que significa 200?
-14. Qual a diferença entre 401 e 403?
-15. O que significa 404?
-16. O que significa 500?
-17. O que é Git?
-18. Qual a diferença entre Git e GitHub?
-19. O que é Docker?
-20. O que é uma API?
-21. O que é REST?
-22. Quais bancos você conhece?
-23. O que é uma chave primária?
-24. O que é uma chave estrangeira?
-25. O que é um índice?
+- [ ] Classe
+- [ ] Objeto
+- [ ] OOP
+- [ ] Encapsulamento
+- [ ] Abstração
+- [ ] Herança
+- [ ] Polimorfismo
+- [ ] Interface
+- [ ] Classe abstrata
+- [ ] Composição
+- [ ] Acoplamento
+- [ ] Coesão
+- [ ] Função pura
+- [ ] Efeito colateral
+- [ ] DRY
+- [ ] KISS
+- [ ] YAGNI
+- [ ] Framework
+- [ ] Git
+- [ ] GitHub
+- [ ] HTTP
+- [ ] Verbos HTTP
+- [ ] Status codes
+- [ ] API
+- [ ] REST
+- [ ] Banco relacional
+- [ ] PK
+- [ ] FK
+- [ ] JOIN
+- [ ] Índice
+- [ ] Transação
+- [ ] API externa
 
 ## Pleno
 
-1.  O que é injeção de dependência?
-2.  Por que injeção de dependência ajuda nos testes?
-3.  O que são Design Patterns?
-4.  Quais Patterns você conhece?
-5.  Explique SOLID.
-6.  O que é Dependency Inversion?
-7.  Onde deve ficar a lógica de negócio?
-8.  O que é Clean Architecture?
-9.  O que é arquitetura hexagonal?
-10. O que é um monólito modular?
-11. O que é uma entidade anêmica?
-12. O que mudou no HTTP/2?
-13. O que é multiplexação?
-14. O que é um reverse proxy?
-15. Para que serve um sistema de filas?
-16. O que é idempotência?
-17. Qual a diferença entre Proxy e Decorator?
-18. Como funcionam microsserviços?
-19. Quais são os problemas de microsserviços?
-20. Qual a diferença entre SQL e NoSQL?
-21. O que é alta coesão?
-22. O que é baixo acoplamento?
-23. Como reduzir acoplamento?
-24. Quando escolher monólito em vez de microsserviços?
-25. Quais são os trade-offs de uma decisão arquitetural?
+- [ ] Injeção de Dependência
+- [ ] Dependency Inversion
+- [ ] SOLID
+- [ ] Design Patterns
+- [ ] Strategy
+- [ ] Factory
+- [ ] Adapter
+- [ ] Decorator
+- [ ] Proxy
+- [ ] Arquitetura em camadas
+- [ ] Clean Architecture
+- [ ] Hexagonal Architecture
+- [ ] Modular Monolith
+- [ ] Microsserviços
+- [ ] Entidade anêmica
+- [ ] DDD
+- [ ] HTTP/2
+- [ ] Multiplexação
+- [ ] Reverse Proxy
+- [ ] Filas
+- [ ] Retry
+- [ ] DLQ
+- [ ] SQL x NoSQL
+- [ ] Concorrência
+- [ ] Locks
+- [ ] Isolation Levels
+- [ ] Testes unitários
+- [ ] Testes de integração
+- [ ] E2E
+- [ ] Segurança
 
-------------------------------------------------------------------------
+---
 
-# 34. Método de resposta em entrevista
+# CONEXÃO COM O BEACH TENNIS MANAGER
 
-Para cada pergunta:
+Este material não deve ficar separado do desenvolvimento.
 
-``` text
-1. Definição
-2. Motivo
-3. Exemplo
-4. Trade-off (quando fizer sentido)
-```
+A ideia é estudar um conceito e procurar sua aplicação no projeto.
 
-Exemplo:
+Exemplos:
 
-**Pergunta:** O que é injeção de dependência?
+```text
+Acoplamento
+   ↓
+Repository + Use Case
 
-``` text
-Definição:
-É uma técnica em que uma classe recebe suas dependências de fora.
-
-Motivo:
-Reduz acoplamento e facilita testes.
-
-Exemplo:
-Um StudentService recebe um StudentRepository pelo construtor.
-
-Trade-off:
-Pode aumentar abstrações e configuração se usada de maneira exagerada.
-```
-
-------------------------------------------------------------------------
-
-# 35. Sequência recomendada de estudo
-
-``` text
-Fundamentos
-    ↓
-OOP
-    ↓
 SOLID
-    ↓
-Injeção de Dependência
-    ↓
-Design Patterns
-    ↓
-Arquitetura
-    ↓
-HTTP / APIs
-    ↓
-Banco de Dados
-    ↓
+   ↓
+Application + Infrastructure
+
+Transação
+   ↓
+Pagamento + Ciclo
+
+Índice
+   ↓
+CPF / buscas
+
+Concorrência
+   ↓
+vagas da turma
+
+Autorização
+   ↓
+Professor x ADMIN
+
+JWT
+   ↓
+autenticação
+
 Filas
-    ↓
-Infraestrutura
-    ↓
-Trade-offs
+   ↓
+futura integração WhatsApp
+
+Testes
+   ↓
+regras de reposição
+
+Arquitetura
+   ↓
+organização do backend
 ```
 
-O objetivo não é responder como um livro.
+O objetivo final é conseguir fazer esta conexão:
 
-É conseguir conversar tecnicamente, explicar decisões e defender por que
-escolheu determinada solução.
-
-------------------------------------------------------------------------
-
-# 36. Regra de ouro para entrevistas
-
-Não tente parecer mais experiente do que realmente é.
-
-Uma resposta como:
-
-> "Não implementei isso diretamente, mas entendo o conceito e consigo
-> explicar como eu investigaria ou implementaria."
-
-é melhor do que inventar experiência.
-
-Para uma posição Pleno, são importantes:
-
--   raciocínio;
--   investigação;
--   trade-offs;
--   comunicação;
--   organização;
--   capacidade de evoluir uma solução.
-
-------------------------------------------------------------------------
-
-# 37. Ciclo de estudo
-
-Este documento deve ser estudado em paralelo com:
-
--   `docs/06-estado-atual.md` --- estado atual e decisões tecnológicas;
--   `docs/04-arquitetura.md` --- arquitetura;
--   `docs/02-regras-de-negocio.md` --- regras;
--   código do projeto --- aplicação prática.
-
-O ciclo recomendado:
-
-``` text
-ESTUDAR TEORIA
-      ↓
-ENTENDER O CONCEITO
-      ↓
-IDENTIFICAR NO PROJETO
-      ↓
-IMPLEMENTAR
-      ↓
-TESTAR
-      ↓
-EXPLICAR COM SUAS PRÓPRIAS PALAVRAS
+```text
+PROBLEMA
+   ↓
+CONCEITO
+   ↓
+DECISÃO
+   ↓
+IMPLEMENTAÇÃO
+   ↓
+TESTE
+   ↓
+TRADE-OFF
 ```
 
-------------------------------------------------------------------------
+Esse é o tipo de raciocínio que queremos desenvolver para o projeto e para as entrevistas.
 
-# 38. Checklist de domínio
+---
 
-Antes de considerar um assunto estudado:
+# Próximo nível de estudo
 
--   [ ] Consigo definir o conceito sem consultar.
--   [ ] Consigo explicar por que ele existe.
--   [ ] Consigo dar um exemplo.
--   [ ] Consigo explicar quando usaria.
--   [ ] Consigo explicar quando evitaria.
--   [ ] Consigo relacionar o conceito ao Beach Tennis Manager.
--   [ ] Consigo responder uma pergunta de aprofundamento.
+Depois de entender este material, o próximo passo não deve ser simplesmente ler mais teoria.
 
-Quando conseguir fazer isso, o conceito deixou de ser apenas algo
-decorado e passou a fazer parte do seu conhecimento técnico.
+Vamos transformar cada tópico em:
+
+1. explicação;
+2. exemplo simples;
+3. exercício;
+4. implementação no Beach Tennis Manager;
+5. teste;
+6. pergunta de entrevista;
+7. pergunta de aprofundamento.
+
+Assim, o estudo deixa de ser apenas memorização e passa a ser prática de engenharia de software.
